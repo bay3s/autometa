@@ -60,7 +60,7 @@ class Trainer:
         if enable_wandb:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
-            wandb.init(project=f"autometa-{project_suffix}", config=self.config.dict)
+            wandb.init(project=f"autometa{project_suffix}", config=self.config.dict)
             pass
 
         # seed
