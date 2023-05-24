@@ -18,14 +18,14 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=0.0,
-                min_value=-1.0,
+                min_value=-3.0,
                 max_value=0.0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
                 value=0.0,
                 min_value=0.0,
-                max_value=1.0,
+                max_value=3.0,
             ),
             delta=0.03,
         ),
@@ -34,14 +34,14 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=0.0,
-                min_value=-1.0,
+                min_value=-3.0,
                 max_value=0.0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
                 value=0.0,
                 min_value=0.0,
-                max_value=1.0,
+                max_value=3.0,
             ),
             delta=0.03,
         ),
@@ -148,12 +148,12 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
 
             x_param = self.randomized_parameter("x_position")
             task["x_position"] = self.np_random.uniform(
-                x_param.lower_bound.min_value, x_param.upper_bound.max_value, size = 1
+                x_param.lower_bound.min_value, x_param.upper_bound.max_value
             )
 
             y_param = self.randomized_parameter("y_position")
             task["y_position"] = self.np_random.uniform(
-                y_param.lower_bound.min_value, y_param.upper_bound.max_value, size = 1
+                y_param.lower_bound.min_value, y_param.upper_bound.max_value
             )
             pass
 
@@ -191,7 +191,7 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
         info.
 
         Args:
-            action (np.ndarray): ACtion to be taken in the environment.
+            action (np.ndarray): Action to be taken in the environment.
 
         Returns:
             Tuple
