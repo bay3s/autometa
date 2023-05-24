@@ -112,6 +112,7 @@ class NavigationEnv(EzPickle, BaseMetaEnv):
         """
         self._elapsed_steps += 1
         action = np.clip(action, -0.1, 0.1)
+
         assert self.action_space.contains(action)
         self._current_state = self._current_state + action
 
