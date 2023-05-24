@@ -148,12 +148,12 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
 
             x_param = self.randomized_parameter("x_position")
             task["x_position"] = self.np_random.uniform(
-                x_param.lower_bound.min_value, x_param.upper_bound.min_value, size = 1
+                x_param.lower_bound.min_value, x_param.upper_bound.max_value, size = 1
             )
 
             y_param = self.randomized_parameter("y_position")
             task["y_position"] = self.np_random.uniform(
-                y_param.lower_bound.min_value, y_param.upper_bound.min_value, size = 1
+                y_param.lower_bound.min_value, y_param.upper_bound.max_value, size = 1
             )
             pass
 
