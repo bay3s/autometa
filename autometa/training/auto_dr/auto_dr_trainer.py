@@ -9,7 +9,7 @@ from autometa.learners.ppo import PPO
 
 from autometa.utils.env_utils import make_vec_envs
 from autometa.utils.training_utils import (
-    sample_meta_episodes,
+    sample_auto_dr,
     save_checkpoint,
     timestamp,
 )
@@ -137,7 +137,7 @@ class AutoDRTrainer:
                 pass
 
             # sample
-            meta_episode_batches, meta_train_reward_per_step = sample_meta_episodes(
+            meta_episode_batches, meta_train_reward_per_step = sample_auto_dr(
                 self.randomizer,
                 self.actor_critic,
                 self.config.meta_episode_length,
@@ -145,9 +145,10 @@ class AutoDRTrainer:
                 self.config.use_gae,
                 self.config.gae_lambda,
                 self.config.discount_gamma,
+                self.device,
             )
 
-            minibatch_sampler = MetaBatchSampler(meta_episode_batches)
+            minibatch_sampler = MetaBatchSampler(meta_episode_batches, self.device)
             ppo_update = self.ppo.update(minibatch_sampler)
 
             wandb_logs = {
@@ -164,13 +165,15 @@ class AutoDRTrainer:
             # add
             wandb_logs.update(self.randomizer.info)
 
-            # save
+            # checkpoint
+            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
             is_last_iteration = j == (self.config.policy_iterations - 1)
+
             if j % checkpoint_interval == 0 or is_last_iteration:
                 save_checkpoint(
                     iteration=j,
                     checkpoint_dir=self.config.checkpoint_dir,
-                    checkpoint_name=str(timestamp()),
+                    checkpoint_name=checkpoint_name,
                     actor=self.actor_critic.actor,
                     critic=self.actor_critic.critic,
                     optimizer=self.ppo.optimizer,

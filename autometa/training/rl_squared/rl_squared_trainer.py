@@ -9,7 +9,7 @@ from autometa.learners.ppo import PPO
 
 from autometa.utils.env_utils import make_vec_envs
 from autometa.utils.training_utils import (
-    sample_meta_episodes,
+    sample_rl_squared,
     save_checkpoint,
     timestamp,
 )
@@ -117,7 +117,7 @@ class RLSquaredTrainer:
                 pass
 
             # sample
-            meta_episode_batches, meta_train_reward_per_step = sample_meta_episodes(
+            meta_episode_batches, meta_train_reward_per_step = sample_rl_squared(
                 actor_critic,
                 rl_squared_envs,
                 self.config.meta_episode_length,
@@ -142,14 +142,14 @@ class RLSquaredTrainer:
                 * self.config.meta_episode_length,
             }
 
-            # save
-            is_last_iteration = j == (self.config.policy_iterations - 1)
+            # checkpoint
             checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
+            is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % self.config.checkpoint_interval == 0 or is_last_iteration:
                 save_checkpoint(
                     iteration=j,
-                    checkpoint_dir=self.config.checkpoint_directory,
+                    checkpoint_dir=self.config.checkpoint_dir,
                     checkpoint_name=checkpoint_name,
                     actor=actor_critic.actor,
                     critic=actor_critic.critic,
