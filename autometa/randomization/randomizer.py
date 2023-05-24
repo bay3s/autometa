@@ -185,7 +185,7 @@ class Randomizer:
             self.sampled_boundaries[env_idx] = boundary
             new_tasks.append(randomized_params)
 
-        self.parallel_envs.update_tasks_async(np.array(new_tasks))
+        self.parallel_envs.sample_tasks_async(np.array(new_tasks))
         pass
 
     def update_buffer(
@@ -234,7 +234,7 @@ class Randomizer:
             randomized_params, boundary = self._get_task()
             self.sampled_boundaries[env_idx] = boundary
             self.parallel_envs.env_method(
-                "update_task", randomized_params, indices=env_idx
+                "sample_task", randomized_params, indices=env_idx
             )
 
     @property

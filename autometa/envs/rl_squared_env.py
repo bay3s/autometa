@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 import numpy as np
 import gym
@@ -8,6 +8,7 @@ from gym.envs.registration import EnvSpec
 
 from autometa.envs.base_randomized_env import BaseRandomizedEnv
 from autometa.envs.base_mujoco_meta_env import BaseMujocoMetaEnv
+from autometa.randomization.randomization_parameter import RandomizationParameter
 
 
 class RLSquaredEnv:
@@ -187,7 +188,7 @@ class RLSquaredEnv:
         """
         return self.observation_space, self.action_space
 
-    def sample_task(self) -> None:
+    def sample_task(self, task: dict = None) -> None:
         """
         Samples a new task for the environment.
 
@@ -200,5 +201,14 @@ class RLSquaredEnv:
         self._prev_done = None
 
         # sample
-        self._wrapped_env.sample_task()
+        self._wrapped_env.sample_task(task)
         pass
+
+    def randomizable_parameters(self) -> List[RandomizationParameter]:
+        """
+        Return a list of randomized parameters.
+
+        Returns:
+            List[RandomizedParameter]
+        """
+        return self._wrapped_env.randomizable_parameters()
