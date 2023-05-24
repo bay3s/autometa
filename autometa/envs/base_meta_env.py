@@ -25,6 +25,7 @@ class BaseMetaEnv(gym.Env, ABC):
         self.seed(seed)
         pass
 
+    @abstractmethod
     def sample_task(self) -> None:
         """
         Sample a new multi-armed bandit problem from distribution over problems.
@@ -78,6 +79,7 @@ class BaseMetaEnv(gym.Env, ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """
         Returns the observation space and the action space.
@@ -87,6 +89,7 @@ class BaseMetaEnv(gym.Env, ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def seed(self, seed: Optional[int] = None) -> List:
         """
         Set the seed for np.random
@@ -101,6 +104,7 @@ class BaseMetaEnv(gym.Env, ABC):
 
         return [seed]
 
+    @abstractmethod
     def step(self, action: Union[int, np.ndarray]) -> Tuple:
         """
         Take one step in the current environment given the action.
@@ -117,6 +121,7 @@ class BaseMetaEnv(gym.Env, ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def elapsed_steps(self) -> int:
         """
         Returns the elapsed number of episode steps in the environment.
@@ -127,6 +132,7 @@ class BaseMetaEnv(gym.Env, ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def max_episode_steps(self) -> int:
         """
         Returns the maximum number of episode steps in the environment.
@@ -136,6 +142,7 @@ class BaseMetaEnv(gym.Env, ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def reset(
         self, *, seed: Optional[int] = None, options: Optional[dict] = None
     ) -> Tuple:
@@ -151,6 +158,7 @@ class BaseMetaEnv(gym.Env, ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def render(self, mode: str = "human") -> None:
         """
         Render the environment.
@@ -163,6 +171,7 @@ class BaseMetaEnv(gym.Env, ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
     def close(self) -> None:
         """
         Close the current environment.
