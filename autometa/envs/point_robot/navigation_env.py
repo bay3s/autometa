@@ -2,7 +2,7 @@ from typing import Tuple, Any, List, Optional
 import numpy as np
 
 import gym
-from gym.utils import EzPickle
+from gym.utils import EzPickle, seeding
 from gym import spaces
 
 from autometa.envs.base_randomized_env import BaseRandomizedEnv
@@ -179,6 +179,9 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
         Returns:
             Tuple
         """
+        if seed is not None:
+            self.np_random, seed = seeding.np_random(seed)
+
         self._current_state = self._start_state
         self._elapsed_steps = 0
         self._episode_reward = 0.0
