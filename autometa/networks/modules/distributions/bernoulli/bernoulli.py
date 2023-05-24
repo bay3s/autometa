@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 
 from autometa.utils.torch_utils import init_module
-from autometa.networks.modules.distributions.bernoulli.fixed_bernoulli import FixedBernoulli
+from autometa.networks.modules.distributions.bernoulli.fixed_bernoulli import (
+    FixedBernoulli,
+)
 
 
 class Bernoulli(nn.Module):

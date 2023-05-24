@@ -45,7 +45,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # config
-    config_path = f"{os.path.dirname(__file__)}/configs/{POINT_ROBOT_NAVIGATION_ENV}.json"
+    config_path = (
+        f"{os.path.dirname(__file__)}/configs/{POINT_ROBOT_NAVIGATION_ENV}.json"
+    )
     experiment_config = ExperimentConfig.from_json(config_path)
 
     # train

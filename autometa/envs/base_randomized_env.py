@@ -6,8 +6,10 @@ import numpy as np
 import gym
 from gym.utils import seeding
 
+from autometa.randomization.randomization_parameter import RandomizationParameter
 
-class BaseMetaEnv(gym.Env, ABC):
+
+class BaseRandomizedEnv(gym.Env, ABC):
     """
     Outline expected functionality for environments being used in meta-learning experiments.
     """
@@ -26,9 +28,12 @@ class BaseMetaEnv(gym.Env, ABC):
         pass
 
     @abstractmethod
-    def sample_task(self) -> None:
+    def sample_task(self, task: dict = None) -> None:
         """
-        Sample a new multi-armed bandit problem from distribution over problems.
+        Update task for the environment
+
+        Args:
+          task (dict): Task to set.
 
         Returns:
           None
@@ -177,5 +182,14 @@ class BaseMetaEnv(gym.Env, ABC):
 
         Returns:
           None
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def randomizable_parameters(self) -> List[RandomizationParameter]:
+        """
+        Return a list of randomizable parameters.
+
+        :return: List[RandomizationParameter]
         """
         raise NotImplementedError

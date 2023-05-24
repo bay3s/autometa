@@ -6,12 +6,12 @@ from copy import deepcopy
 
 from gym.envs.registration import EnvSpec
 
+from autometa.envs.base_randomized_env import BaseRandomizedEnv
 from autometa.envs.base_mujoco_meta_env import BaseMujocoMetaEnv
-from autometa.envs.base_meta_env import BaseMetaEnv
 
 
 class RLSquaredEnv:
-    def __init__(self, env: Union[BaseMetaEnv, BaseMujocoMetaEnv]):
+    def __init__(self, env: Union[BaseRandomizedEnv, BaseMujocoMetaEnv]):
         """
         Abstract class that outlines functions required by an environment for meta-learning via RL-Squared.
 
