@@ -89,7 +89,6 @@ class BaseMetaEnv(gym.Env, ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
     def seed(self, seed: Optional[int] = None) -> List:
         """
         Set the seed for np.random
