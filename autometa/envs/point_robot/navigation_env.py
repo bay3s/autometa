@@ -12,8 +12,8 @@ class NavigationEnv(EzPickle, BaseMetaEnv):
     def __init__(
         self,
         episode_length: int,
-        low: float = -0.5,
-        high: float = 0.5,
+        low: float = -3.0,
+        high: float = 3.0,
         auto_reset: bool = True,
         seed: Optional[int] = None,
     ):
