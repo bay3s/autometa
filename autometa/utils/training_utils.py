@@ -9,7 +9,7 @@ import torch.nn as nn
 
 from autometa.envs.pytorch_vec_env_wrapper import PyTorchVecEnvWrapper
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
-from autometa.training.meta_episode_batch import MetaEpisodeBatch
+from autometa.sampling.meta_episode_batch import MetaEpisodeBatch
 
 
 @torch.no_grad()

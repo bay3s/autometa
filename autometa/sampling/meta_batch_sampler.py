@@ -1,7 +1,7 @@
 import torch
 from typing import List
 
-from autometa.training.meta_episode_batch import MetaEpisodeBatch
+from autometa.sampling.meta_episode_batch import MetaEpisodeBatch
 
 
 class MetaBatchSampler:

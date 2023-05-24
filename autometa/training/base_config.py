@@ -1,14 +1,13 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, fields, asdict
 import os
 import json
 from datetime import datetime
-import git
 
 
 @dataclass(frozen=True)
-class ExperimentConfig:
+class BaseConfig:
     """
-    Dataclass to keep track of experiment configs.
+    Base dataclass to keep track of experiment configs.
 
     Params:
       algo (str): Algo to train.
@@ -75,8 +74,8 @@ class ExperimentConfig:
     gae_lambda: bool
 
     # checkpointing
-    checkpoint_interval: int = 1
-    checkpoint_all: bool = False
+    checkpoint_interval: int
+    checkpoint_all: bool
     pass
 
     def __post_init__(self):
@@ -89,16 +88,14 @@ class ExperimentConfig:
         object.__setattr__(self, "_timestamp", int(datetime.timestamp(datetime.now())))
 
     @property
-    def repository_path(self) -> str:
+    def timestamp(self) -> int:
         """
-        Returns the base path for the git repo.
+        Returns a timestamp for the experiment config
 
         Returns:
-            str
+            None
         """
-        repo = git.Repo("./", search_parent_directories=True)
-
-        return repo.git.rev_parse("--show-toplevel")
+        return self._timestamp
 
     @property
     def directory(self) -> str:
@@ -108,7 +105,7 @@ class ExperimentConfig:
         Returns:
           str
         """
-        return f"{self.repository_path}/results/{self.env_name.lower()}/run-{self._timestamp}/"
+        return f"./results/{self.algo}/{self.env_name.lower()}/run-{self.timestamp}/"
 
     @property
     def log_dir(self) -> str:
@@ -121,26 +118,27 @@ class ExperimentConfig:
         return f"{self.directory}/logs/"
 
     @property
-    def checkpoint_directory(self) -> str:
+    def checkpoint_dir(self) -> str:
         """
         Returns the directory to store checkpoints.
 
         Returns:
           str
         """
-        return f"{self.directory}checkpoints/"
+        return f"{self.directory}/checkpoints/"
 
     @classmethod
-    def from_json(cls, json_file_path: str) -> "ExperimentConfig":
+    def from_json(cls, json_file_path: str) -> "TrainingConfig":
         """
         Takes the json file path as parameter and returns the populated TrainingConfigs.
 
         Returns:
-          ExperimentConfig
+          AutoDRConfig
         """
+        keys = [f.name for f in fields(cls)]
         file = json.load(open(json_file_path))
 
-        return cls(**{key: file[key] for key in file.keys()})
+        return cls(**{key: file[key] for key in keys if key in file})
 
     @property
     def json(self) -> str:
@@ -150,7 +148,7 @@ class ExperimentConfig:
         Returns:
           str
         """
-        return json.dumps(self.__dict__, indent=2)
+        return json.dumps(self.__dict__, indent = 2)
 
     @property
     def dict(self) -> dict:
