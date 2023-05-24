@@ -12,7 +12,7 @@
   "max_grad_norm": 0.5,
   "cuda_deterministic": false,
   "use_cuda": true,
-  "policy_iterations": 250,
+  "policy_iterations": 500,
   "meta_episode_length": 100,
   "meta_episodes_per_epoch": 2500,
   "num_processes": 20,
