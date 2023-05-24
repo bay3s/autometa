@@ -110,6 +110,7 @@ class NavigationEnv(EzPickle, BaseMetaEnv):
         Returns:
             Tuple
         """
+        self._elapsed_steps += 1
         action = np.clip(action, -0.1, 0.1)
         assert self.action_space.contains(action)
         self._current_state = self._current_state + action
@@ -184,6 +185,7 @@ class NavigationEnv(EzPickle, BaseMetaEnv):
         """
         return self._observation_space, self._action_space
 
+    @property
     def elapsed_steps(self) -> int:
         """
         Returns the elapsed number of episode steps in the environment.
@@ -193,6 +195,7 @@ class NavigationEnv(EzPickle, BaseMetaEnv):
         """
         raise self._elapsed_steps
 
+    @property
     def max_episode_steps(self) -> int:
         """
         Returns the maximum number of episode steps in the environment.
