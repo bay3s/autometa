@@ -113,7 +113,7 @@ class BaseConfig:
         Return the directory to store logs.
 
         Returns:
-          str
+            str
         """
         return f"{self.directory}/logs/"
 
@@ -123,17 +123,17 @@ class BaseConfig:
         Returns the directory to store checkpoints.
 
         Returns:
-          str
+            str
         """
         return f"{self.directory}/checkpoints/"
 
     @classmethod
-    def from_json(cls, json_file_path: str) -> "TrainingConfig":
+    def from_json(cls, json_file_path: str) -> "BaseConfig":
         """
         Takes the json file path as parameter and returns the populated TrainingConfigs.
 
         Returns:
-          AutoDRConfig
+            BaseConfig
         """
         keys = [f.name for f in fields(cls)]
         file = json.load(open(json_file_path))
@@ -146,7 +146,7 @@ class BaseConfig:
         Return JSON string with dataclass fields.
 
         Returns:
-          str
+            str
         """
         return json.dumps(self.__dict__, indent=2)
 
@@ -156,7 +156,7 @@ class BaseConfig:
         Return dictionary with dataclass fields.
 
         Returns:
-          dict
+            dict
         """
         return {k: str(v) for k, v in asdict(self).items()}
 
@@ -165,7 +165,7 @@ class BaseConfig:
         Returns the checkpoint directory.
 
         Returns:
-          str
+            str
         """
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
