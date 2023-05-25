@@ -165,10 +165,14 @@ class MultiprocessingVecEnv(VecEnv):
         """
         Step the environments with the given action
 
-        :param actions: the action
-        :return: observation, reward, done, information
+        Args:
+            actions (np.ndarray): the action
+
+        Returns:
+            VecEnvStepReturn
         """
         self.step_async(actions)
+
         return self.step_wait()
 
     def sample_tasks_async(self, tasks: List[dict] = None) -> None:
@@ -257,7 +261,7 @@ class MultiprocessingVecEnv(VecEnv):
         Close the environment.
 
         Returns:
-          None
+            None
         """
         if self.closed:
             return
