@@ -4,6 +4,7 @@ import torch
 import gym
 
 from gym.envs.registration import register
+from stable_baselines3.common.vec_env.vec_normalize import VecNormalize
 
 from autometa.envs.multiprocessing_vec_env import MultiprocessingVecEnv
 from autometa.envs.pytorch_vec_env_wrapper import PyTorchVecEnvWrapper
@@ -35,6 +36,7 @@ def make_env_thunk(
     env_configs: dict,
     seed: int,
     rank: int,
+    gamma: float
 ) -> Callable:
     """
     Returns a callable to create environments based on the specs provided.
@@ -44,6 +46,7 @@ def make_env_thunk(
         env_configs (dict): Key word arguments for making the environment.
         seed (int): Random seed for the experiments.
         rank (int): "Rank" of the environment that the callable would return.
+        gamma (float): "Gamma" the discount factor for the experiment.
 
     Returns:
         Callable
@@ -79,6 +82,8 @@ def make_vec_envs(
     seed: int,
     num_processes: int,
     device: torch.device,
+    gamma: float,
+    normalize: bool
 ) -> PyTorchVecEnvWrapper:
     """
     Returns PyTorch compatible vectorized environments.
@@ -89,16 +94,22 @@ def make_vec_envs(
         seed (int): Random seed for environments.
         num_processes (int): Number of parallel processes to be used for simulations.
         device (torch.device): Device to use with PyTorch tensors.
+        gamma (float): Discount factor for the environment.
+        normalize (bool): Whether to normalize envinronment rewards & observations.
 
     Returns:
         PyTorchVecEnvWrapper
     """
     envs = [
-        make_env_thunk(env_name, env_kwargs, seed, rank)
+        make_env_thunk(env_name, env_kwargs, seed, rank, gamma)
         for rank in range(num_processes)
     ]
 
     envs = MultiprocessingVecEnv(envs)
+
+    if normalize:
+        envs = VecNormalize(envs, gamma = gamma)
+
     envs = PyTorchVecEnvWrapper(envs, device)
 
     return envs
@@ -112,6 +123,11 @@ def register_custom_envs() -> None:
         None
     """
     register(
-        id="PointRobotNavigation-v1",
+        id="Navigation-v1",
         entry_point="autometa.envs.point_robot.navigation_env:NavigationEnv",
+    )
+
+    register(
+        id="CheetahVelocity-v1",
+        entry_point="autometa.envs.cheetah.cheetah_velocity_env:CheetahVelocityEnv",
     )

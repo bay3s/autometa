@@ -1,6 +1,6 @@
 {
   "algo": "rl_squared",
-  "env_name": "PointRobotNavigation-v1",
+  "env_name": "Navigation-v1",
   "random_seed": 6785,
   "env_configs": {
     "episode_length": 100

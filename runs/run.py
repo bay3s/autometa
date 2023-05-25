@@ -14,9 +14,11 @@ register_custom_envs()
 
 
 POINT_ROBOT_NAV = "point_robot_navigation"
+CHEETAH_VELOCITY = "cheetah_velocity"
 
 SUPPORTED_ENVIRONMENTS = [
     POINT_ROBOT_NAV,
+    CHEETAH_VELOCITY
 ]
 
 RL_SQUARED = "rl_squared"

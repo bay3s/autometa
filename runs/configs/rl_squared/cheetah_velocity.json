@@ -1,6 +1,6 @@
 {
-  "algo": "auto_dr",
-  "env_name": "Navigation-v1",
+  "algo": "rl_squared",
+  "env_name": "CheetahVelocity-v1",
   "random_seed": 6785,
   "env_configs": {
     "episode_length": 100
@@ -14,14 +14,9 @@
   "use_cuda": true,
   "policy_iterations": 500,
   "meta_episode_length": 100,
-  "meta_episodes_per_epoch": 2500,
-  "num_processes": 20,
+  "meta_episodes_per_epoch": 500,
+  "num_processes": 1,
   "discount_gamma": 0.99,
-  "adr_evaluation_probability": 0.5,
-  "adr_performance_buffer_size": 50,
-  "adr_performance_threshold_lower": -250,
-  "adr_performance_threshold_upper": -40,
-  "adr_delta": 0.05,
   "ppo_opt_epochs": 10,
   "ppo_num_minibatches": 50,
   "ppo_clip_param": 0.1,

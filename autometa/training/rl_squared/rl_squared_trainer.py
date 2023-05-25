@@ -76,6 +76,7 @@ class RLSquaredTrainer:
             self.config.random_seed,
             self.config.num_processes,
             self.device,
+            self.config.discount_gamma,
         )
 
         actor_critic = StatefulActorCritic(

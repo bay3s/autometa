@@ -7,7 +7,7 @@ import gym
 from gym.utils import seeding
 
 
-class BaseMujocoMetaEnv(gym.Env, ABC):
+class BaseRandomizedMujocoEnv(gym.Env, ABC):
     """
     Outline expected functionality for Mujoco environments being used in meta-learning experiments.
     """
@@ -25,7 +25,7 @@ class BaseMujocoMetaEnv(gym.Env, ABC):
         self.seed(seed)
         pass
 
-    def sample_task(self) -> None:
+    def sample_task(self, task: dict = None) -> None:
         """
         Sample a new multi-armed bandit problem from distribution over problems.
 
