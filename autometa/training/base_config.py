@@ -93,7 +93,7 @@ class BaseConfig:
         Returns a timestamp for the experiment config
 
         Returns:
-            None
+            int
         """
         return self._timestamp
 
