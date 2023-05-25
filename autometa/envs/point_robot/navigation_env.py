@@ -27,7 +27,7 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
                 min_value=0.0,
                 max_value=3.0,
             ),
-            delta=0.03,
+            delta=0.05,
         ),
         RandomizationParameter(
             name="y_position",
@@ -43,7 +43,7 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
                 min_value=0.0,
                 max_value=3.0,
             ),
-            delta=0.03,
+            delta=0.05,
         ),
     ]
 
