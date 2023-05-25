@@ -190,6 +190,7 @@ class BaseRandomizedEnv(gym.Env, ABC):
         """
         Return a list of randomizable parameters.
 
-        :return: List[RandomizationParameter]
+        Returns:
+          List[RandomizationParameter]
         """
         raise NotImplementedError

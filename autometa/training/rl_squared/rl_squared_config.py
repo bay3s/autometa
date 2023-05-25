@@ -36,4 +36,5 @@ class RLSquaredConfig(BaseConfig):
       checkpoint_interval (int): Number of updates between each checkpoint.
       checkpoint_all (bool): Whether to checkpoint all models or just the last one.
     """
+
     pass

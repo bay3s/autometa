@@ -20,9 +20,7 @@ from autometa.randomization.randomizer import Randomizer
 
 
 class AutoDRTrainer:
-    def __init__(
-        self, config: AutoDRConfig, checkpoint_path: str = None
-    ):
+    def __init__(self, config: AutoDRConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 
@@ -88,7 +86,7 @@ class AutoDRTrainer:
             self.config.env_configs,
             self.config.random_seed,
             self.config.num_processes,
-            self.device
+            self.device,
         )
 
         self.actor_critic = StatefulActorCritic(

@@ -19,9 +19,7 @@ from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 
 
 class RLSquaredTrainer:
-    def __init__(
-        self, config: RLSquaredConfig, restart_checkpoint: str = None
-    ):
+    def __init__(self, config: RLSquaredConfig, restart_checkpoint: str = None):
         """
         Initialize an instance of a trainer for PPO.
 

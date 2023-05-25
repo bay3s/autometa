@@ -116,7 +116,8 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
         """
         Return a list of randomized parameters.
 
-        :return: List[RandomizedParameter]
+        Returns:
+            List[RandomizedParameter]
         """
         return self.RANDOMIZABLE_PARAMETERS
 
@@ -210,7 +211,7 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
 
         x_dist = self._current_state[0] - self._target_state[0]
         y_dist = self._current_state[1] - self._target_state[1]
-        reward = -np.sqrt(x_dist ** 2 + y_dist ** 2)
+        reward = -np.sqrt(x_dist**2 + y_dist**2)
 
         terminated = (np.abs(x_dist) < 0.01) and (np.abs(y_dist) < 0.01)
         self._episode_reward += reward
@@ -318,4 +319,3 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
           None
         """
         pass
-

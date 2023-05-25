@@ -22,10 +22,7 @@ SUPPORTED_ENVIRONMENTS = [
 RL_SQUARED = "rl_squared"
 AUTO_DR = "auto_dr"
 
-SUPPORTED_ALGOS = [
-    RL_SQUARED,
-    AUTO_DR
-]
+SUPPORTED_ALGOS = [RL_SQUARED, AUTO_DR]
 
 
 if __name__ == "__main__":
@@ -93,11 +90,13 @@ if __name__ == "__main__":
     # train
     if args.algo == RL_SQUARED:
         experiment_config = RLSquaredConfig.from_json(config_path)
-        trainer = RLSquaredTrainer(experiment_config, restart_checkpoint=args.from_checkpoint)
+        trainer = RLSquaredTrainer(
+            experiment_config, restart_checkpoint=args.from_checkpoint
+        )
         trainer.train(enable_wandb=not args.disable_wandb, is_dev=not args.prod)
     elif args.algo == AUTO_DR:
         experiment_config = AutoDRConfig.from_json(config_path)
         # @todo add checkpoint
         trainer = AutoDRTrainer(experiment_config)
-        trainer.train(enable_wandb = not args.disable_wandb, is_dev = not args.prod)
+        trainer.train(enable_wandb=not args.disable_wandb, is_dev=not args.prod)
         pass

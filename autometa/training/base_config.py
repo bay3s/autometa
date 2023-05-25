@@ -148,7 +148,7 @@ class BaseConfig:
         Returns:
           str
         """
-        return json.dumps(self.__dict__, indent = 2)
+        return json.dumps(self.__dict__, indent=2)
 
     @property
     def dict(self) -> dict:
