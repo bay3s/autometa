@@ -71,8 +71,8 @@ class AutoDRTrainer:
 
         if enable_wandb:
             wandb.login()
-            suffix = "-dev" if is_dev else ""
-            wandb.init(project=f"autometa{suffix}", config=self.config.dict)
+            project_suffix = "-dev" if is_dev else ""
+            wandb.init(project=f"autometa{project_suffix}", config=self.config.dict)
             pass
 
         # seed
