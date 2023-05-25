@@ -35,6 +35,9 @@ class RLSquaredConfig(BaseConfig):
       log_dir (str): Directory to log to.
       checkpoint_interval (int): Number of updates between each checkpoint.
       checkpoint_all (bool): Whether to checkpoint all models or just the last one.
+      normalize_obs (bool): Whether to normalize observations.
+      normalize_rew (bool): Whether to normalize observations.
     """
-
+    norm_observations: bool
+    norm_rewards: bool
     pass

@@ -6,13 +6,8 @@ from gym.utils import EzPickle
 
 from autometa.envs.cheetah.base_cheetah_env import BaseCheetahEnv
 
-from autometa.randomization.randomization_parameter import RandomizationParameter
-from autometa.randomization.randomization_bound_type import RandomizationBoundType
-from autometa.randomization.randomization_bound import RandomizationBound
-
 
 class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
-
     RANDOMIZABLE_PARAMETERS = []
 
     def __init__(
@@ -121,7 +116,7 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         Returns:
             None
         """
-        # @todo update this.
+        # @todo update this for meta-learning.
         pass
 
     def reset(

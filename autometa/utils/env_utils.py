@@ -32,11 +32,7 @@ def get_render_func(venv: gym.Env):
 
 
 def make_env_thunk(
-    env_name: str,
-    env_configs: dict,
-    seed: int,
-    rank: int,
-    gamma: float
+    env_name: str, env_configs: dict, seed: int, rank: int, gamma: float
 ) -> Callable:
     """
     Returns a callable to create environments based on the specs provided.
@@ -83,7 +79,8 @@ def make_vec_envs(
     num_processes: int,
     device: torch.device,
     gamma: float,
-    normalize: bool
+    norm_observations: bool,
+    norm_rewards: bool,
 ) -> PyTorchVecEnvWrapper:
     """
     Returns PyTorch compatible vectorized environments.
@@ -95,7 +92,8 @@ def make_vec_envs(
         num_processes (int): Number of parallel processes to be used for simulations.
         device (torch.device): Device to use with PyTorch tensors.
         gamma (float): Discount factor for the environment.
-        normalize (bool): Whether to normalize envinronment rewards & observations.
+        norm_observations (bool): Whether to normalize envinronment observations.
+        norm_rewards (bool): Whether to normalize envinronment rewards.
 
     Returns:
         PyTorchVecEnvWrapper
@@ -107,8 +105,8 @@ def make_vec_envs(
 
     envs = MultiprocessingVecEnv(envs)
 
-    if normalize:
-        envs = VecNormalize(envs, gamma = gamma)
+    if norm_observations or norm_rewards:
+        envs = VecNormalize(envs, gamma=gamma, norm_obs = norm_observations, norm_reward = norm_rewards)
 
     envs = PyTorchVecEnvWrapper(envs, device)
 

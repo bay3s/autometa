@@ -25,5 +25,7 @@
   "use_gae": true,
   "gae_lambda": 0.99,
   "checkpoint_interval": 1,
-  "checkpoint_all": false
+  "checkpoint_all": false,
+  "norm_observations": true,
+  "norm_rewards": true
 }

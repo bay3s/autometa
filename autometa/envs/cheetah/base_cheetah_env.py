@@ -1,9 +1,11 @@
+import numpy as np
 from typing import Tuple, Any
 from abc import ABC
 
 import gym
-
+from gym.spaces import Box
 from gym.envs.mujoco import HalfCheetahEnv as HalfCheetahEnv_
+
 from autometa.envs.base_randomized_mujoco_env import BaseRandomizedMujocoEnv
 
 
@@ -17,7 +19,23 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
         """
         BaseRandomizedMujocoEnv.__init__(self, seed)
         HalfCheetahEnv_.__init__(self)
+
+        # update
+        self.observation_space = Box(low=-np.inf, high=np.inf, shape=(20,), dtype=np.float64)
         pass
+
+    def _get_obs(self) -> np.ndarray:
+        """
+        Get observation.
+
+        Returns:
+            np.ndarray
+        """
+        return np.concatenate([
+            self.sim.data.qpos.flat[1:],
+            self.sim.data.qvel.flat,
+            self.get_body_com("torso").flat,
+        ]).astype(np.float32).flatten()
 
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """

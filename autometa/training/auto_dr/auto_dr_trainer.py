@@ -87,6 +87,10 @@ class AutoDRTrainer:
             self.config.random_seed,
             self.config.num_processes,
             self.device,
+            self.config.discount_gamma,
+            # @todo update normalization.
+            norm_rewards=False,
+            norm_observations=False,
         )
 
         self.actor_critic = StatefulActorCritic(

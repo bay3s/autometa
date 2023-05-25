@@ -77,6 +77,8 @@ class RLSquaredTrainer:
             self.config.num_processes,
             self.device,
             self.config.discount_gamma,
+            self.config.norm_observations,
+            self.config.norm_rewards,
         )
 
         actor_critic = StatefulActorCritic(
