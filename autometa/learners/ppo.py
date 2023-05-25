@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
-from autometa.training.meta_batch_sampler import MetaBatchSampler
+from autometa.sampling.meta_batch_sampler import MetaBatchSampler
 from autometa.learners.ppo_update import PPOUpdate
 
 

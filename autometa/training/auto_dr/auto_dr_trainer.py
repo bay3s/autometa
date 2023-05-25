@@ -4,52 +4,62 @@ import torch
 import wandb
 
 import autometa.utils.logging_utils as logging_utils
-from autometa.training.experiment_config import ExperimentConfig
+from autometa.training.auto_dr.auto_dr_config import AutoDRConfig
 from autometa.learners.ppo import PPO
 
 from autometa.utils.env_utils import make_vec_envs
 from autometa.utils.training_utils import (
-    sample_meta_episodes,
+    sample_auto_dr,
     save_checkpoint,
     timestamp,
 )
-from autometa.training.meta_batch_sampler import MetaBatchSampler
 
+from autometa.sampling.meta_batch_sampler import MetaBatchSampler
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
+from autometa.randomization.randomizer import Randomizer
 
 
-class Trainer:
-    def __init__(
-        self, experiment_config: ExperimentConfig, restart_checkpoint: str = None
-    ):
+class AutoDRTrainer:
+    def __init__(self, config: AutoDRConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 
         Args:
-            experiment_config (ExperimentConfig): Params to be used for the trainer.
-            restart_checkpoint (str): Checkpoint path from where to restart the experiment.
+            config (AutoDRConfig): Params to be used for the trainer.
+            checkpoint_path (str): Checkpoint path from where to restart the experiment.
         """
-        self.config = experiment_config
+        self.config = config
 
         # private
         self._device = None
         self._log_dir = None
 
-        # restart
-        self._restart_checkpoint = restart_checkpoint
+        # general
+        self.ppo = None
+        self.vectorized_envs = None
+        self.actor_critic = None
+
+        # domain randomization
+        self.randomizer = None
+        self.sampled_boundaries = None
+
+        # checkpoint
+        self._checkpoint_path = checkpoint_path
         pass
 
     def train(
         self,
-        is_dev: bool,
+        checkpoint_interval: int = 1,
         enable_wandb: bool = True,
+        is_dev: bool = True,
     ) -> None:
         """
         Train an agent based on the configs specified by the training parameters.
 
         Args:
-            is_dev (bool): Whether to log the run statistics as a `dev` run.
+            checkpoint_interval (bool): Number of iterations after which to checkpoint.
             enable_wandb (bool): Whether to log to Wandb, `True` by default.
+            is_dev (bool): Whether this is a dev run of th experiment.
 
         Returns:
             None
@@ -69,10 +79,9 @@ class Trainer:
 
         # clean
         logging_utils.cleanup_log_dir(self.log_dir)
-
         torch.set_num_threads(1)
 
-        rl_squared_envs = make_vec_envs(
+        self.vectorized_envs = make_vec_envs(
             self.config.env_name,
             self.config.env_configs,
             self.config.random_seed,
@@ -80,14 +89,23 @@ class Trainer:
             self.device,
         )
 
-        actor_critic = StatefulActorCritic(
-            rl_squared_envs.observation_space,
-            rl_squared_envs.action_space,
+        self.actor_critic = StatefulActorCritic(
+            self.vectorized_envs.observation_space,
+            self.vectorized_envs.action_space,
             recurrent_state_size=256,
         ).to_device(self.device)
 
-        ppo = PPO(
-            actor_critic=actor_critic,
+        self.randomizer = Randomizer(
+            parallel_envs=self.vectorized_envs,
+            evaluation_probability=self.config.adr_evaluation_probability,
+            buffer_size=self.config.adr_performance_buffer_size,
+            performance_threshold_lower=self.config.adr_performance_threshold_lower,
+            performance_threshold_upper=self.config.adr_performance_threshold_upper,
+            delta=self.config.adr_delta,
+        )
+
+        self.ppo = PPO(
+            actor_critic=self.actor_critic,
             clip_param=self.config.ppo_clip_param,
             opt_epochs=self.config.ppo_opt_epochs,
             num_minibatches=self.config.ppo_num_minibatches,
@@ -102,24 +120,24 @@ class Trainer:
         current_iteration = 0
 
         # load
-        if self._restart_checkpoint:
-            checkpoint = torch.load(self._restart_checkpoint)
-            current_iteration = checkpoint["iteration"]
-            actor_critic.actor.load_state_dict(checkpoint["actor"])
-            actor_critic.critic.load_state_dict(checkpoint["critic"])
-            ppo.optimizer.load_state_dict(checkpoint["optimizer"])
+        if self._checkpoint_path:
+            checkpoint = torch.load(self._checkpoint_path)
+            self.actor_critic.actor.load_state_dict(checkpoint["actor"])
+            self.actor_critic.critic.load_state_dict(checkpoint["critic"])
+            self.ppo.optimizer.load_state_dict(checkpoint["optimizer"])
+            current_iteration = checkpoint["epoch"]
             pass
 
         for j in range(current_iteration, self.config.policy_iterations):
             # anneal
             if self.config.use_linear_lr_decay:
-                ppo.anneal_learning_rates(j, self.config.policy_iterations)
+                self.ppo.anneal_learning_rates(j, self.config.policy_iterations)
                 pass
 
             # sample
-            meta_episode_batches, meta_train_reward_per_step = sample_meta_episodes(
-                actor_critic,
-                rl_squared_envs,
+            meta_episode_batches, meta_train_reward_per_step = sample_auto_dr(
+                self.randomizer,
+                self.actor_critic,
                 self.config.meta_episode_length,
                 self.config.meta_episodes_per_epoch,
                 self.config.use_gae,
@@ -129,7 +147,7 @@ class Trainer:
             )
 
             minibatch_sampler = MetaBatchSampler(meta_episode_batches, self.device)
-            ppo_update = ppo.update(minibatch_sampler)
+            ppo_update = self.ppo.update(minibatch_sampler)
 
             wandb_logs = {
                 "meta_train/mean_policy_loss": ppo_update.policy_loss,
@@ -142,28 +160,29 @@ class Trainer:
                 * self.config.meta_episode_length,
             }
 
-            # save
-            is_last_iteration = j == (self.config.policy_iterations - 1)
-            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
+            # add
+            wandb_logs.update(self.randomizer.info)
 
-            if j % self.config.checkpoint_interval == 0 or is_last_iteration:
+            # checkpoint
+            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
+            is_last_iteration = j == (self.config.policy_iterations - 1)
+
+            if j % checkpoint_interval == 0 or is_last_iteration:
                 save_checkpoint(
                     iteration=j,
-                    checkpoint_dir=self.config.checkpoint_directory,
+                    checkpoint_dir=self.config.checkpoint_dir,
                     checkpoint_name=checkpoint_name,
-                    actor=actor_critic.actor,
-                    critic=actor_critic.critic,
-                    optimizer=ppo.optimizer,
+                    actor=self.actor_critic.actor,
+                    critic=self.actor_critic.critic,
+                    optimizer=self.ppo.optimizer,
                 )
                 pass
 
             if enable_wandb:
                 wandb.log(wandb_logs)
 
-        # end
         if enable_wandb:
             wandb.finish()
-        pass
 
     @property
     def log_dir(self) -> str:

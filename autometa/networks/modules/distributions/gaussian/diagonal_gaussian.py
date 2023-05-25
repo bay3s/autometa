@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 
 from autometa.utils.torch_utils import init_module
-from autometa.networks.modules.distributions.gaussian.fixed_gaussian import FixedGaussian
+from autometa.networks.modules.distributions.gaussian.fixed_gaussian import (
+    FixedGaussian,
+)
 
 
 class _AddBias(nn.Module):

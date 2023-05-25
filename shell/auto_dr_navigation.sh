@@ -10,4 +10,4 @@
 source /home/${USER}/.bashrc
 source activate rl
 
-srun python3 $HOME/autometa/runs/point_robot/run.py --prod
+srun python3 $HOME/autometa/runs/run.py --algo=auto_dr --env-name=point_robot_navigation --prod

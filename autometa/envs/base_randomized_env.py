@@ -6,8 +6,10 @@ import numpy as np
 import gym
 from gym.utils import seeding
 
+from autometa.randomization.randomization_parameter import RandomizationParameter
 
-class BaseMetaEnv(gym.Env, ABC):
+
+class BaseRandomizedEnv(gym.Env, ABC):
     """
     Outline expected functionality for environments being used in meta-learning experiments.
     """
@@ -17,7 +19,7 @@ class BaseMetaEnv(gym.Env, ABC):
         Initialize a base meta-learning environment.
 
         Args:
-          seed (int): Random seed.
+            seed (int): Random seed.
         """
         gym.Env.__init__(self)
 
@@ -26,12 +28,15 @@ class BaseMetaEnv(gym.Env, ABC):
         pass
 
     @abstractmethod
-    def sample_task(self) -> None:
+    def sample_task(self, task: dict = None) -> None:
         """
-        Sample a new multi-armed bandit problem from distribution over problems.
+        Update task for the environment
+
+        Args:
+            task (dict): Task to set.
 
         Returns:
-          None
+            None
         """
         raise NotImplementedError
 
@@ -42,7 +47,7 @@ class BaseMetaEnv(gym.Env, ABC):
         Returns the observation space for the environment.
 
         Returns:
-          gym.Space
+            gym.Space
         """
         raise NotImplementedError
 
@@ -53,7 +58,7 @@ class BaseMetaEnv(gym.Env, ABC):
         Set the observation space for the environment.
 
         Returns:
-          gym.Space
+            gym.Space
         """
         raise NotImplementedError
 
@@ -85,7 +90,7 @@ class BaseMetaEnv(gym.Env, ABC):
         Returns the observation space and the action space.
 
         Returns:
-          Tuple[gym.Space, gym.Space]
+            Tuple[gym.Space, gym.Space]
         """
         raise NotImplementedError
 
@@ -94,7 +99,7 @@ class BaseMetaEnv(gym.Env, ABC):
         Set the seed for np.random
 
         Args:
-          seed (int): Seed to set for random number generator.
+            seed (int): Seed to set for random number generator.
 
         Returns:
             List
@@ -126,7 +131,7 @@ class BaseMetaEnv(gym.Env, ABC):
         Returns the elapsed number of episode steps in the environment.
 
         Returns:
-          int
+            int
         """
         raise NotImplementedError
 
@@ -137,7 +142,7 @@ class BaseMetaEnv(gym.Env, ABC):
         Returns the maximum number of episode steps in the environment.
 
         Returns:
-          int
+            int
         """
         raise NotImplementedError
 
@@ -166,7 +171,7 @@ class BaseMetaEnv(gym.Env, ABC):
           mode (str): Render mode.
 
         Returns:
-          None
+            None
         """
         raise NotImplementedError
 
@@ -176,6 +181,16 @@ class BaseMetaEnv(gym.Env, ABC):
         Close the current environment.
 
         Returns:
-          None
+            None
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def randomizable_parameters(self) -> List[RandomizationParameter]:
+        """
+        Return a list of randomizable parameters.
+
+        Returns:
+            List[RandomizationParameter]
         """
         raise NotImplementedError
