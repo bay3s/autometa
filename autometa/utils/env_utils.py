@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Union
 
 import torch
 import gym
@@ -11,12 +11,30 @@ from autometa.envs.pytorch_vec_env_wrapper import PyTorchVecEnvWrapper
 from autometa.envs.rl_squared_env import RLSquaredEnv
 
 
+def get_vec_normalize(venv) -> Union[VecNormalize, None]:
+    """
+    Return the `VecNormalize` wrapper if the current environment is wrapped in it.
+
+    Args:
+        venv (object): Environment in which
+
+    Returns:
+        Union[VecNormalize, None]
+    """
+    if isinstance(venv, VecNormalize):
+        return venv
+    elif hasattr(venv, 'venv'):
+        return get_vec_normalize(venv.venv)
+
+    return None
+
+
 def get_render_func(venv: gym.Env):
     """
     Get render function for the environment.
 
     Args:
-        venv (object): Environment in which
+        venv (object): Environment for which to retrieve the render function.
 
     Returns:
         Callable

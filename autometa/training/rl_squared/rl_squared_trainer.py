@@ -7,7 +7,7 @@ import autometa.utils.logging_utils as logging_utils
 from autometa.training.rl_squared.rl_squared_config import RLSquaredConfig
 from autometa.learners.ppo import PPO
 
-from autometa.utils.env_utils import make_vec_envs
+from autometa.utils.env_utils import make_vec_envs, get_vec_normalize
 from autometa.utils.training_utils import (
     sample_rl_squared,
     save_checkpoint,
@@ -148,6 +148,8 @@ class RLSquaredTrainer:
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % self.config.checkpoint_interval == 0 or is_last_iteration:
+                vec_normalized = get_vec_normalize(rl_squared_envs)
+
                 save_checkpoint(
                     iteration=j,
                     checkpoint_dir=self.config.checkpoint_dir,
@@ -155,6 +157,12 @@ class RLSquaredTrainer:
                     actor=actor_critic.actor,
                     critic=actor_critic.critic,
                     optimizer=ppo.optimizer,
+                    observations_rms = (
+                        vec_normalized.obs_rms if vec_normalized is not None else None
+                    ),
+                    rewards_rms = (
+                        vec_normalized.ret_rms if vec_normalized is not None else None
+                    ),
                 )
                 pass
 

@@ -7,6 +7,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from stable_baselines3.common.running_mean_std import RunningMeanStd
+
 from autometa.envs.pytorch_vec_env_wrapper import PyTorchVecEnvWrapper
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 from autometa.sampling.meta_episode_batch import MetaEpisodeBatch
@@ -242,6 +244,8 @@ def save_checkpoint(
     actor: nn.Module,
     critic: nn.Module,
     optimizer: torch.optim.Optimizer,
+    observations_rms: RunningMeanStd = None,
+    rewards_rms: RunningMeanStd = None
 ):
     """
     Saves a checkpoint of the latest actor, critic, optimizer.
@@ -253,6 +257,8 @@ def save_checkpoint(
         actor (nn.Module): Actor in the actor-critic setup.
         critic (nn.Module): Critic in the actor-critic setup.
         optimizer (torch.optim.Optimizer): Optimizer used.
+        observations_rms (RunningMeanStd): RunningMeanStd for observations.
+        rewards_rms (RunningMeanStd): RunningMeanStd for rewards.
 
     Returns:
         None
@@ -262,16 +268,26 @@ def save_checkpoint(
 
     checkpoint_path = f"{checkpoint_dir}/checkpoint-{checkpoint_name}.pt"
 
+    # data
+    checkpoint_data = {
+        "iteration": iteration,
+        "actor": actor.state_dict(),
+        "critic": critic.state_dict(),
+        "optimizer": optimizer.state_dict(),
+    }
+
+    if observations_rms is not None:
+        checkpoint_data.update({
+            "observations_rms": observations_rms
+        })
+
+    if rewards_rms is not None:
+        checkpoint_data.update({
+            "reward_rms": rewards_rms
+        })
+
     # save
-    torch.save(
-        {
-            "iteration": iteration,
-            "actor": actor.state_dict(),
-            "critic": critic.state_dict(),
-            "optimizer": optimizer.state_dict(),
-        },
-        checkpoint_path,
-    )
+    torch.save(checkpoint_data, checkpoint_path)
     pass
 
 

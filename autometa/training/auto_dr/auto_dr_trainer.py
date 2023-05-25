@@ -7,7 +7,7 @@ import autometa.utils.logging_utils as logging_utils
 from autometa.training.auto_dr.auto_dr_config import AutoDRConfig
 from autometa.learners.ppo import PPO
 
-from autometa.utils.env_utils import make_vec_envs
+from autometa.utils.env_utils import make_vec_envs, get_vec_normalize
 from autometa.utils.training_utils import (
     sample_auto_dr,
     save_checkpoint,
@@ -172,13 +172,21 @@ class AutoDRTrainer:
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
+                vec_normalized = get_vec_normalize(self.vectorized_envs)
+
                 save_checkpoint(
-                    iteration=j,
-                    checkpoint_dir=self.config.checkpoint_dir,
-                    checkpoint_name=checkpoint_name,
-                    actor=self.actor_critic.actor,
-                    critic=self.actor_critic.critic,
-                    optimizer=self.ppo.optimizer,
+                    iteration = j,
+                    checkpoint_dir = self.config.checkpoint_dir,
+                    checkpoint_name = checkpoint_name,
+                    actor = self.actor_critic.actor,
+                    critic = self.actor_critic.critic,
+                    optimizer = self.ppo.optimizer,
+                    observations_rms = (
+                        vec_normalized.obs_rms if vec_normalized is not None else None
+                    ),
+                    rewards_rms = (
+                        vec_normalized.ret_rms if vec_normalized is not None else None
+                    ),
                 )
                 pass
 
