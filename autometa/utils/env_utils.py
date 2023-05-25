@@ -129,3 +129,8 @@ def register_custom_envs() -> None:
         id="CheetahVelocity-v1",
         entry_point="autometa.envs.cheetah.cheetah_velocity_env:CheetahVelocityEnv",
     )
+
+    register(
+        id="CheetahSimple-v1",
+        entry_point="autometa.envs.cheetah.simple_cheetah_env:SimpleCheetahEnv",
+    )
