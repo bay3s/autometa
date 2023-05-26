@@ -175,16 +175,16 @@ class AutoDRTrainer:
                 vec_normalized = get_vec_normalize(self.vectorized_envs)
 
                 save_checkpoint(
-                    iteration = j,
-                    checkpoint_dir = self.config.checkpoint_dir,
-                    checkpoint_name = checkpoint_name,
-                    actor = self.actor_critic.actor,
-                    critic = self.actor_critic.critic,
-                    optimizer = self.ppo.optimizer,
-                    observations_rms = (
+                    iteration=j,
+                    checkpoint_dir=self.config.checkpoint_dir,
+                    checkpoint_name=checkpoint_name,
+                    actor=self.actor_critic.actor,
+                    critic=self.actor_critic.critic,
+                    optimizer=self.ppo.optimizer,
+                    observations_rms=(
                         vec_normalized.obs_rms if vec_normalized is not None else None
                     ),
-                    rewards_rms = (
+                    rewards_rms=(
                         vec_normalized.ret_rms if vec_normalized is not None else None
                     ),
                 )

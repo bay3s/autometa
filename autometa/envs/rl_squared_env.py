@@ -212,3 +212,13 @@ class RLSquaredEnv:
             List[RandomizedParameter]
         """
         return self._wrapped_env.randomizable_parameters()
+
+    def render(self, mode: str = None):
+        """
+        Args:
+            mode (str): Mode in which to render the environment.
+
+        Returns:
+            None
+        """
+        return self._wrapped_env.render(mode)

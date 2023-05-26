@@ -155,7 +155,8 @@ class MultiprocessingVecEnv(VecEnv):
         self.remotes[0].send(("get_spaces", None))
         observation_space, action_space = self.remotes[0].recv()
 
-        # VecEnv.__init__(self, len(env_fns), observation_space, action_space)
+        VecEnv.__init__(self, len(env_fns), observation_space, action_space)
+
         self.num_envs = len(env_fns)
         self.observation_space = observation_space
         self.action_space = action_space

@@ -23,7 +23,7 @@ def get_vec_normalize(venv) -> Union[VecNormalize, None]:
     """
     if isinstance(venv, VecNormalize):
         return venv
-    elif hasattr(venv, 'venv'):
+    elif hasattr(venv, "venv"):
         return get_vec_normalize(venv.venv)
 
     return None
@@ -39,6 +39,7 @@ def get_render_func(venv: gym.Env):
     Returns:
         Callable
     """
+    print(venv)
     if hasattr(venv, "envs"):
         return venv.envs[0].render
     elif hasattr(venv, "venv"):
@@ -50,7 +51,7 @@ def get_render_func(venv: gym.Env):
 
 
 def make_env_thunk(
-    env_name: str, env_configs: dict, seed: int, rank: int, gamma: float
+    env_name: str, env_configs: dict, seed: int, rank: int
 ) -> Callable:
     """
     Returns a callable to create environments based on the specs provided.
@@ -60,7 +61,6 @@ def make_env_thunk(
         env_configs (dict): Key word arguments for making the environment.
         seed (int): Random seed for the experiments.
         rank (int): "Rank" of the environment that the callable would return.
-        gamma (float): "Gamma" the discount factor for the experiment.
 
     Returns:
         Callable
@@ -117,14 +117,16 @@ def make_vec_envs(
         PyTorchVecEnvWrapper
     """
     envs = [
-        make_env_thunk(env_name, env_kwargs, seed, rank, gamma)
+        make_env_thunk(env_name, env_kwargs, seed, rank)
         for rank in range(num_processes)
     ]
 
     envs = MultiprocessingVecEnv(envs)
 
     if norm_observations or norm_rewards:
-        envs = VecNormalize(envs, gamma=gamma, norm_obs = norm_observations, norm_reward = norm_rewards)
+        envs = VecNormalize(
+            envs, gamma=gamma, norm_obs=norm_observations, norm_reward=norm_rewards
+        )
 
     envs = PyTorchVecEnvWrapper(envs, device)
 

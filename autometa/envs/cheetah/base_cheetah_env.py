@@ -21,7 +21,9 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
         HalfCheetahEnv_.__init__(self)
 
         # update
-        self.observation_space = Box(low=-np.inf, high=np.inf, shape=(20,), dtype=np.float64)
+        self.observation_space = Box(
+            low=-np.inf, high=np.inf, shape=(20,), dtype=np.float64
+        )
         pass
 
     def _get_obs(self) -> np.ndarray:
@@ -31,11 +33,17 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             np.ndarray
         """
-        return np.concatenate([
-            self.sim.data.qpos.flat[1:],
-            self.sim.data.qvel.flat,
-            self.get_body_com("torso").flat,
-        ]).astype(np.float32).flatten()
+        return (
+            np.concatenate(
+                [
+                    self.sim.data.qpos.flat[1:],
+                    self.sim.data.qvel.flat,
+                    self.get_body_com("torso").flat,
+                ]
+            )
+            .astype(np.float32)
+            .flatten()
+        )
 
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """
@@ -99,7 +107,7 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
         self.viewer.cam.distance = self.model.stat.extent * 0.35
         self.viewer._hide_overlay = True
 
-    def render(self, mode: str = "none"):
+    def render(self, mode: str = "human"):
         """
         Render the enevironment.
 
@@ -109,11 +117,7 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             None
         """
-        if mode == "rgb_array":
-            self._get_viewer().render()
-            # window size used for old mujoco-py:
-            width, height = 500, 500
-            data = self._get_viewer().read_pixels(width, height, depth=False)
-            return data
-        elif mode == "human":
-            self._get_viewer().render()
+        if mode == "human":
+            self._get_viewer(mode).render()
+        else:
+            raise NotImplementedError(f"`render` not implemented for `{mode}` mode.")

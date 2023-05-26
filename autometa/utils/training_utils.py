@@ -245,7 +245,7 @@ def save_checkpoint(
     critic: nn.Module,
     optimizer: torch.optim.Optimizer,
     observations_rms: RunningMeanStd = None,
-    rewards_rms: RunningMeanStd = None
+    rewards_rms: RunningMeanStd = None,
 ):
     """
     Saves a checkpoint of the latest actor, critic, optimizer.
@@ -277,14 +277,10 @@ def save_checkpoint(
     }
 
     if observations_rms is not None:
-        checkpoint_data.update({
-            "observations_rms": observations_rms
-        })
+        checkpoint_data.update({"observations_rms": observations_rms})
 
     if rewards_rms is not None:
-        checkpoint_data.update({
-            "reward_rms": rewards_rms
-        })
+        checkpoint_data.update({"reward_rms": rewards_rms})
 
     # save
     torch.save(checkpoint_data, checkpoint_path)

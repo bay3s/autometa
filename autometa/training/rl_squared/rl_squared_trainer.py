@@ -58,7 +58,7 @@ class RLSquaredTrainer:
         if enable_wandb:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
-            wandb.init(project=f"autometa{project_suffix}", config=self.config.dict)
+            wandb.init(project=f"autometa{project_suffix}", config=self.config.dict, id=self.config.run_id)
             pass
 
         # seed
@@ -144,7 +144,7 @@ class RLSquaredTrainer:
             }
 
             # checkpoint
-            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
+            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % self.config.checkpoint_interval == 0 or is_last_iteration:
@@ -157,10 +157,10 @@ class RLSquaredTrainer:
                     actor=actor_critic.actor,
                     critic=actor_critic.critic,
                     optimizer=ppo.optimizer,
-                    observations_rms = (
+                    observations_rms=(
                         vec_normalized.obs_rms if vec_normalized is not None else None
                     ),
-                    rewards_rms = (
+                    rewards_rms=(
                         vec_normalized.ret_rms if vec_normalized is not None else None
                     ),
                 )

@@ -24,6 +24,7 @@ class StatefulActorCritic(BaseActorCritic):
         Args:
           observation_space (gym.Space): Observation space in which the agent operates.
           action_space (gym.Space): Action space in which the agent operates.
+          recurrent_state_size (int): Recurrent state size.
         """
         super(StatefulActorCritic, self).__init__(observation_space, action_space)
 
