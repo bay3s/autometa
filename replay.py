@@ -67,7 +67,6 @@ if __name__ == "__main__":
         1,
         torch.device("cpu"),
         configs.discount_gamma,
-        # @todo update ADR configs to account for normalization
         configs.norm_observations,
         configs.norm_rewards,
     )
