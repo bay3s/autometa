@@ -71,6 +71,7 @@ class AutoDRTrainer:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
             wandb.init(project=f"autometa{project_suffix}", config=self.config.dict)
+            self.config.run_id = wandb.run.id
             pass
 
         # seed
@@ -88,9 +89,8 @@ class AutoDRTrainer:
             self.config.num_processes,
             self.device,
             self.config.discount_gamma,
-            # @todo update normalization.
-            norm_rewards=False,
-            norm_observations=False,
+            norm_rewards=self.config.norm_rewards,
+            norm_observations=self.config.norm_observations,
         )
 
         self.actor_critic = StatefulActorCritic(
@@ -168,7 +168,7 @@ class AutoDRTrainer:
             wandb_logs.update(self.randomizer.info)
 
             # checkpoint
-            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
+            checkpoint_ver = str(timestamp()) if self.config.checkpoint_all else ""
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
@@ -177,7 +177,7 @@ class AutoDRTrainer:
                 save_checkpoint(
                     iteration=j,
                     checkpoint_dir=self.config.checkpoint_dir,
-                    checkpoint_name=checkpoint_name,
+                    checkpoint_name=checkpoint_ver,
                     actor=self.actor_critic.actor,
                     critic=self.actor_critic.critic,
                     optimizer=self.ppo.optimizer,

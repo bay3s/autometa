@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 
-@dataclass(frozen=True)
+@dataclass
 class BaseConfig:
     """
     Base dataclass to keep track of experiment configs.
@@ -90,7 +90,9 @@ class BaseConfig:
         Returns:
             None
         """
-        object.__setattr__(self, "_timestamp", int(datetime.timestamp(datetime.now())))
+        self._timestamp = int(datetime.timestamp(datetime.now()))
+        self._wandb_run_id = None
+        pass
 
     @property
     def run_id(self) -> str:
@@ -100,7 +102,23 @@ class BaseConfig:
         Returns:
             str
         """
+        if self._wandb_run_id is not None:
+            return self._wandb_run_id
+
         return str(self._timestamp)
+
+    @run_id.setter
+    def run_id(self, wandb_run_id: str) -> str:
+        """
+        Returns a timestamp for the experiment config
+
+        Args:
+            wandb_run_id (str): `wandb` run id.
+
+        Returns:
+            str
+        """
+        self._wandb_run_id = wandb_run_id
 
     @property
     def directory(self) -> str:

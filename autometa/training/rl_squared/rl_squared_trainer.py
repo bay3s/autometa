@@ -58,7 +58,8 @@ class RLSquaredTrainer:
         if enable_wandb:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
-            wandb.init(project=f"autometa{project_suffix}", config=self.config.dict, id=self.config.run_id)
+            wandb.init(project=f"autometa{project_suffix}", config=self.config.dict)
+            self.config.run_id = wandb.run.id
             pass
 
         # seed
