@@ -152,9 +152,15 @@ class Randomizer:
 
         # adr
         if np.random.uniform(0, 1) <= self.evaluation_probability:
-            sampled_param = random.choice(list(self.randomized_parameters.values()))
+            # param
+            sampled_param = random.choice(
+                [param for param in self.randomized_parameters.values() if not param.frozen]
+            )
+
+            # bound
+            param_bounds = list([sampled_param.lower_bound, sampled_param.upper_bound])
             sampled_bound = random.choice(
-                list([sampled_param.lower_bound, sampled_param.upper_bound])
+                [bound for bound in param_bounds if not bound.frozen]
             )
 
             # boundary sampling

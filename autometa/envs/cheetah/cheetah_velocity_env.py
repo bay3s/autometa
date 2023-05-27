@@ -13,12 +13,13 @@ from autometa.randomization.randomization_bound import RandomizationBound
 class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
-            name = "velocity",
+            name = "target_velocity",
             lower_bound = RandomizationBound(
                 type = RandomizationBoundType.LOWER_BOUND,
                 value = 0.0,
                 min_value = 0.0,
                 max_value = 0.0,
+                frozen = True
             ),
             upper_bound = RandomizationBound(
                 type = RandomizationBoundType.UPPER_BOUND,
@@ -39,8 +40,6 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
     ):
         """
         Half-Cheetah environment with target velocity, as described in [1].
-
-        The code is adapted from https://github.com/cbfinn/maml_rl
 
         The half-cheetah follows the dynamics from MuJoCo [2], and receives at each time step a reward composed of a
         control cost and a penalty equal to the difference between its current velocity and the target velocity.
@@ -165,15 +164,15 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         if task is None:
             task = dict()
 
-            x_param = self.randomized_parameter("velocity")
-            task["velocity"] = self.np_random.uniform(
-                x_param.lower_bound.min_value, x_param.upper_bound.max_value
+            target_velocity = self.randomized_parameter("target_velocity")
+            task["target_velocity"] = self.np_random.uniform(
+                target_velocity.lower_bound.min_value, target_velocity.upper_bound.max_value
             )
             pass
 
         self._target_velocity = np.concatenate(
             [
-                [task["velocity"]]
+                [task["target_velocity"]]
             ],
             dtype=np.float32,
         )
