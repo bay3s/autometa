@@ -1,20 +1,39 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 import numpy as np
-import gym
-from gym.utils import EzPickle
+from gym.utils import EzPickle, seeding
 
 from autometa.envs.cheetah.base_cheetah_env import BaseCheetahEnv
 
+from autometa.randomization.randomization_parameter import RandomizationParameter
+from autometa.randomization.randomization_bound_type import RandomizationBoundType
+from autometa.randomization.randomization_bound import RandomizationBound
+
 
 class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
-    RANDOMIZABLE_PARAMETERS = []
+    RANDOMIZABLE_PARAMETERS = [
+        RandomizationParameter(
+            name = "velocity",
+            lower_bound = RandomizationBound(
+                type = RandomizationBoundType.LOWER_BOUND,
+                value = 0.0,
+                min_value = 0.0,
+                max_value = 0.0,
+            ),
+            upper_bound = RandomizationBound(
+                type = RandomizationBoundType.UPPER_BOUND,
+                value = 0.0,
+                min_value = 0.0,
+                max_value = 3.0,
+            ),
+            delta = 0.05,
+        ),
+    ]
 
     def __init__(
         self,
         episode_length: int = 100,
-        min_velocity: float = 0.0,
-        max_velocity: float = 3.0,
+        randomizable_parameters: List[RandomizationParameter] = RANDOMIZABLE_PARAMETERS,
         auto_reset: bool = True,
         seed: int = None,
     ):
@@ -35,8 +54,8 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
 
         Args:
             episode_length (int): Maximum number of steps per episode.
-            min_velocity (float): Minimum target velocity.
-            max_velocity (float): Maximum target velocity.
+            randomizable_parameters (List[RandomizableParamter]): Randomizable parameters.
+            auto_reset (bool): Whether to auto-reset at the end of episode.
             seed (int): Random seed.
         """
         self._episode_length = episode_length
@@ -44,13 +63,11 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         self._auto_reset = auto_reset
         self._episode_reward = 0.0
 
-        self._min_velocity = min_velocity
-        self._max_velocity = max_velocity
+        # stub
+        self._target_velocity = None
 
-        # set a stub, sample later.
-        self._target_velocity = np.random.uniform(
-            self._min_velocity, self._max_velocity, size=1
-        )
+        # params
+        self._randomized_parameters = self._init_params(randomizable_parameters)
 
         BaseCheetahEnv.__init__(self)
         EzPickle.__init__(self)
@@ -60,14 +77,43 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         self.sample_task()
         pass
 
-    def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
+    @staticmethod
+    def _init_params(params: List[RandomizationParameter]) -> dict:
         """
-        Returns the action space
+        Convert a list of parameters to dict.
+
+        Args:
+            params (List[RandomizationParameter]): A list of randomized parameters.
 
         Returns:
-            Tuple[gym.Space, gym.Space]
+            dict
         """
-        return self.observation_space, self.action_space
+        randomized = dict()
+        for param in params:
+            randomized[param.name] = param
+
+        return randomized
+
+    def randomizable_parameters(self) -> List[RandomizationParameter]:
+        """
+        Return a list of randomized parameters.
+
+        Returns:
+            List[RandomizedParameter]
+        """
+        return self.RANDOMIZABLE_PARAMETERS
+
+    def randomized_parameter(self, param_name: str) -> RandomizationParameter:
+        """
+        Return the randomized parameter.
+
+        Args:
+            param_name (str): Name of the parameter to return.
+
+        Returns:
+            RandomizationParameter
+        """
+        return self._randomized_parameters[param_name]
 
     def step(self, action: np.ndarray) -> Tuple:
         """
@@ -116,7 +162,21 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         Returns:
             None
         """
-        # @todo update this for meta-learning.
+        if task is None:
+            task = dict()
+
+            x_param = self.randomized_parameter("velocity")
+            task["velocity"] = self.np_random.uniform(
+                x_param.lower_bound.min_value, x_param.upper_bound.max_value
+            )
+            pass
+
+        self._target_velocity = np.concatenate(
+            [
+                [task["velocity"]]
+            ],
+            dtype=np.float32,
+        )
         pass
 
     def reset(
@@ -132,6 +192,9 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         Returns:
             Tuple
         """
+        if seed is not None:
+            self.np_random, seed = seeding.np_random(seed)
+
         self._elapsed_steps = 0
         self._episode_reward = 0.0
 

@@ -125,11 +125,18 @@ class AutoDRTrainer:
 
         # load
         if self._checkpoint_path:
-            checkpoint = torch.load(self._checkpoint_path)
+            checkpoint = torch.load(self._checkpoint_path, map_location = self.device)
+            current_iteration = checkpoint["iteration"]
+
+            # policy / ppo
             self.actor_critic.actor.load_state_dict(checkpoint["actor"])
             self.actor_critic.critic.load_state_dict(checkpoint["critic"])
             self.ppo.optimizer.load_state_dict(checkpoint["optimizer"])
-            current_iteration = checkpoint["epoch"]
+
+            # rms
+            vec_normalized = get_vec_normalize(self.vectorized_envs)
+            vec_normalized.obs_rms = checkpoint["observation_rms"]
+            vec_normalized.ret_rms = checkpoint["reward_rms"]
             pass
 
         for j in range(current_iteration, self.config.policy_iterations):

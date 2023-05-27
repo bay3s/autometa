@@ -140,10 +140,6 @@ class NavigationEnv(EzPickle, BaseRandomizedEnv):
         Returns:
             None
         """
-        self._current_state = self._start_state
-        self._elapsed_steps = 0
-        self._episode_reward = 0.0
-
         if task is None:
             task = dict()
 

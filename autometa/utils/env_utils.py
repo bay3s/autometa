@@ -50,9 +50,7 @@ def get_render_func(venv: gym.Env):
     return None
 
 
-def make_env_thunk(
-    env_name: str, env_configs: dict, seed: int, rank: int
-) -> Callable:
+def make_env_thunk(env_name: str, env_configs: dict, seed: int, rank: int) -> Callable:
     """
     Returns a callable to create environments based on the specs provided.
 

@@ -123,7 +123,7 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
             raise NotImplementedError(f"`render` not implemented for `{mode}` mode.")
 
     def viewer_setup(self):
-        camera_id = self.model.camera_name2id('track')
+        camera_id = self.model.camera_name2id("track")
 
         self.viewer.cam.type = 2
         self.viewer.cam.fixedcamid = camera_id

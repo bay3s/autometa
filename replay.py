@@ -4,14 +4,17 @@ import torch
 
 from autometa.training.base_config import BaseConfig
 
-from autometa.utils.env_utils import make_vec_envs, register_custom_envs, get_vec_normalize
+from autometa.utils.env_utils import (
+    make_vec_envs,
+    register_custom_envs,
+    get_vec_normalize,
+)
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 
 register_custom_envs()
 
 
 if __name__ == "__main__":
-
     MODEL_DIRECTORY = f"{os.path.dirname(__file__)}/trained_models/"
 
     RL_SQUARED = "rl_squared"
@@ -27,17 +30,13 @@ if __name__ == "__main__":
         "--env-name", help="Environment for which to run the replay.", type=str
     )
 
-    parser.add_argument(
-        "--seed", help="Random seed to be used.", type=int
-    )
+    parser.add_argument("--seed", help="Random seed to be used.", type=int)
 
     parser.add_argument(
         "--run", help="`wandb` run id used for model training.", type=str
     )
 
-    parser.add_argument(
-        "--length", help="`episode_length` for the replay.", type=int
-    )
+    parser.add_argument("--length", help="`episode_length` for the replay.", type=int)
 
     parser.add_argument(
         "--deterministic",
@@ -87,7 +86,7 @@ if __name__ == "__main__":
     actor_critic = StatefulActorCritic(
         vectorized_envs.observation_space,
         vectorized_envs.action_space,
-        recurrent_state_size = 256,
+        recurrent_state_size=256,
     ).to_device(torch.device("cpu"))
 
     actor_critic.actor.load_state_dict(checkpoint["actor"])
@@ -102,11 +101,17 @@ if __name__ == "__main__":
 
     obs = vectorized_envs.reset()
     starting_obs = obs
-    vectorized_envs.env_method('render', indices=[0], mode = "human")
+    vectorized_envs.env_method("render", indices=[0], mode="human")
 
     while True:
         with torch.no_grad():
-            value, action, _, recurrent_states_actor, recurrent_states_critic = actor_critic.act(
+            (
+                value,
+                action,
+                _,
+                recurrent_states_actor,
+                recurrent_states_critic,
+            ) = actor_critic.act(
                 observations=obs,
                 recurrent_states_actor=recurrent_states_actor,
                 recurrent_states_critic=recurrent_states_critic,
@@ -117,9 +122,8 @@ if __name__ == "__main__":
 
         prev_obs = obs
         obs, reward, done, _ = vectorized_envs.step(action)
-        vectorized_envs.env_method('render', indices = [0], mode = "human")
+        vectorized_envs.env_method("render", indices=[0], mode="human")
 
         if done[0]:
-            print('done')
+            print("done")
             continue
-

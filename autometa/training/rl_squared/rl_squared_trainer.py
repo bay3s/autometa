@@ -105,11 +105,18 @@ class RLSquaredTrainer:
 
         # load
         if self._restart_checkpoint:
-            checkpoint = torch.load(self._restart_checkpoint, map_location = self.device)
+            checkpoint = torch.load(self._restart_checkpoint, map_location=self.device)
             current_iteration = checkpoint["iteration"]
+
+            # policy / ppo
             actor_critic.actor.load_state_dict(checkpoint["actor"])
             actor_critic.critic.load_state_dict(checkpoint["critic"])
             ppo.optimizer.load_state_dict(checkpoint["optimizer"])
+
+            # rms
+            vec_normalized = get_vec_normalize(rl_squared_envs)
+            vec_normalized.obs_rms = checkpoint["observation_rms"]
+            vec_normalized.ret_rms = checkpoint["reward_rms"]
             pass
 
         for j in range(current_iteration, self.config.policy_iterations):
