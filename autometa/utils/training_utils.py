@@ -283,7 +283,7 @@ def save_checkpoint(
         checkpoint_data.update({"observations_rms": observations_rms})
 
     if rewards_rms is not None:
-        checkpoint_data.update({"reward_rms": rewards_rms})
+        checkpoint_data.update({"rewards_rms": rewards_rms})
 
     # save
     torch.save(checkpoint_data, checkpoint_path)

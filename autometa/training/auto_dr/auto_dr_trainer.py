@@ -135,8 +135,8 @@ class AutoDRTrainer:
 
             # rms
             vec_normalized = get_vec_normalize(self.vectorized_envs)
-            vec_normalized.obs_rms = checkpoint["observation_rms"]
-            vec_normalized.ret_rms = checkpoint["reward_rms"]
+            vec_normalized.obs_rms = checkpoint["observations_rms"]
+            vec_normalized.ret_rms = checkpoint["rewards_rms"]
             pass
 
         for j in range(current_iteration, self.config.policy_iterations):
