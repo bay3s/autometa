@@ -4,7 +4,7 @@ import torch
 
 from autometa.training.base_config import BaseConfig
 
-from autometa.utils.env_utils import make_vec_envs, register_custom_envs
+from autometa.utils.env_utils import make_vec_envs, register_custom_envs, get_vec_normalize
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 
 register_custom_envs()
@@ -32,7 +32,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--run-id", help="`wandb` run id for the model training.", type=str
+        "--run", help="`wandb` run id used for model training.", type=str
+    )
+
+    parser.add_argument(
+        "--length", help="`episode_length` for the replay.", type=int
     )
 
     parser.add_argument(
@@ -53,12 +57,13 @@ if __name__ == "__main__":
             env_folder = env_folder.replace(ch, ch.lower())
 
     # config
-    config_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.run_id}/config.json"
+    config_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.run}/config.json"
     configs = BaseConfig.from_json(config_path)
 
     # checkpoint
-    checkpoint_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.model_version}/model.pt"
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.run}/model.pt"
+    checkpoint = torch.load(checkpoint_path, map_location=torch.device("cpu"))
+    configs.env_configs["episode_length"] = args.length
 
     vectorized_envs = make_vec_envs(
         configs.env_name,
@@ -70,6 +75,13 @@ if __name__ == "__main__":
         configs.norm_observations,
         configs.norm_rewards,
     )
+
+    vec_norm = get_vec_normalize(vectorized_envs)
+    if vec_norm is not None:
+        # @todo update naming conventions for checkpointing.
+        vec_norm.obs_rms = checkpoint["observations_rms"]
+        vec_norm.ret_rms = checkpoint["reward_rms"]
+        pass
 
     # policy
     actor_critic = StatefulActorCritic(
@@ -89,6 +101,7 @@ if __name__ == "__main__":
     recurrent_masks = torch.zeros(1, 1)
 
     obs = vectorized_envs.reset()
+    starting_obs = obs
     vectorized_envs.env_method('render', indices=[0], mode = "human")
 
     while True:
@@ -100,10 +113,13 @@ if __name__ == "__main__":
                 recurrent_state_masks=recurrent_masks,
                 deterministic=args.deterministic,
             )
+            pass
 
+        prev_obs = obs
         obs, reward, done, _ = vectorized_envs.step(action)
-        recurrent_states_actor.fill_(0.0 if done else 1.0)
-        recurrent_states_critic.fill_(0.0 if done else 1.0)
         vectorized_envs.env_method('render', indices = [0], mode = "human")
-        continue
+
+        if done[0]:
+            print('done')
+            continue
 

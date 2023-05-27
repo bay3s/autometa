@@ -105,7 +105,7 @@ class RLSquaredTrainer:
 
         # load
         if self._restart_checkpoint:
-            checkpoint = torch.load(self._restart_checkpoint)
+            checkpoint = torch.load(self._restart_checkpoint, map_location = self.device)
             current_iteration = checkpoint["iteration"]
             actor_critic.actor.load_state_dict(checkpoint["actor"])
             actor_critic.critic.load_state_dict(checkpoint["critic"])
@@ -145,11 +145,11 @@ class RLSquaredTrainer:
             }
 
             # checkpoint
-            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % self.config.checkpoint_interval == 0 or is_last_iteration:
                 vec_normalized = get_vec_normalize(rl_squared_envs)
+                checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
 
                 save_checkpoint(
                     iteration=j,

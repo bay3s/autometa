@@ -266,7 +266,10 @@ def save_checkpoint(
     if not os.path.exists(checkpoint_dir):
         pathlib.Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
 
-    checkpoint_path = f"{checkpoint_dir}/checkpoint-{checkpoint_name}.pt"
+    if checkpoint_name:
+        checkpoint_path = f"{checkpoint_dir}/checkpoint-{checkpoint_name}.pt"
+    else:
+        checkpoint_path = f"{checkpoint_dir}/checkpoint.pt"
 
     # data
     checkpoint_data = {
