@@ -175,7 +175,7 @@ class AutoDRTrainer:
             wandb_logs.update(self.randomizer.info)
 
             # checkpoint
-            checkpoint_ver = str(timestamp()) if self.config.checkpoint_all else ""
+            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
@@ -184,7 +184,7 @@ class AutoDRTrainer:
                 save_checkpoint(
                     iteration=j,
                     checkpoint_dir=self.config.checkpoint_dir,
-                    checkpoint_name=checkpoint_ver,
+                    checkpoint_name=checkpoint_name,
                     actor=self.actor_critic.actor,
                     critic=self.actor_critic.critic,
                     optimizer=self.ppo.optimizer,
