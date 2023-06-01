@@ -80,3 +80,13 @@ class RandomizationParameter:
           None
         """
         self.lower_bound.increase(self.delta)
+
+    @property
+    def frozen(self) -> bool:
+        """
+        Returns true if the upper and lower bounds for the parameter have been expanded to their limits.
+
+        Returns:
+            None
+        """
+        return self.lower_bound.frozen and self.upper_bound.frozen

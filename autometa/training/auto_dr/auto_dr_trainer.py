@@ -7,7 +7,7 @@ import autometa.utils.logging_utils as logging_utils
 from autometa.training.auto_dr.auto_dr_config import AutoDRConfig
 from autometa.learners.ppo import PPO
 
-from autometa.utils.env_utils import make_vec_envs
+from autometa.utils.env_utils import make_vec_envs, get_vec_normalize
 from autometa.utils.training_utils import (
     sample_auto_dr,
     save_checkpoint,
@@ -71,6 +71,7 @@ class AutoDRTrainer:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
             wandb.init(project=f"autometa{project_suffix}", config=self.config.dict)
+            self.config.run_id = wandb.run.id
             pass
 
         # seed
@@ -87,6 +88,9 @@ class AutoDRTrainer:
             self.config.random_seed,
             self.config.num_processes,
             self.device,
+            self.config.discount_gamma,
+            norm_rewards=self.config.norm_rewards,
+            norm_observations=self.config.norm_observations,
         )
 
         self.actor_critic = StatefulActorCritic(
@@ -121,11 +125,18 @@ class AutoDRTrainer:
 
         # load
         if self._checkpoint_path:
-            checkpoint = torch.load(self._checkpoint_path)
+            checkpoint = torch.load(self._checkpoint_path, map_location = self.device)
+            current_iteration = checkpoint["iteration"]
+
+            # policy / ppo
             self.actor_critic.actor.load_state_dict(checkpoint["actor"])
             self.actor_critic.critic.load_state_dict(checkpoint["critic"])
             self.ppo.optimizer.load_state_dict(checkpoint["optimizer"])
-            current_iteration = checkpoint["epoch"]
+
+            # rms
+            vec_normalized = get_vec_normalize(self.vectorized_envs)
+            vec_normalized.obs_rms = checkpoint["observations_rms"]
+            vec_normalized.ret_rms = checkpoint["rewards_rms"]
             pass
 
         for j in range(current_iteration, self.config.policy_iterations):
@@ -164,10 +175,12 @@ class AutoDRTrainer:
             wandb_logs.update(self.randomizer.info)
 
             # checkpoint
-            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
+            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
+                vec_normalized = get_vec_normalize(self.vectorized_envs)
+
                 save_checkpoint(
                     iteration=j,
                     checkpoint_dir=self.config.checkpoint_dir,
@@ -175,6 +188,12 @@ class AutoDRTrainer:
                     actor=self.actor_critic.actor,
                     critic=self.actor_critic.critic,
                     optimizer=self.ppo.optimizer,
+                    observations_rms=(
+                        vec_normalized.obs_rms if vec_normalized is not None else None
+                    ),
+                    rewards_rms=(
+                        vec_normalized.ret_rms if vec_normalized is not None else None
+                    ),
                 )
                 pass
 

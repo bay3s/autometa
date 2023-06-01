@@ -1,6 +1,6 @@
 {
   "algo": "auto_dr",
-  "env_name": "PointRobotNavigation-v1",
+  "env_name": "Navigation-v1",
   "random_seed": 6785,
   "env_configs": {
     "episode_length": 100
@@ -18,7 +18,7 @@
   "num_processes": 20,
   "discount_gamma": 0.99,
   "adr_evaluation_probability": 0.5,
-  "adr_performance_buffer_size": 50,
+  "adr_performance_buffer_size": 25,
   "adr_performance_threshold_lower": -250,
   "adr_performance_threshold_upper": -40,
   "adr_delta": 0.05,

@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 
-@dataclass(frozen=True)
+@dataclass
 class BaseConfig:
     """
     Base dataclass to keep track of experiment configs.
@@ -13,6 +13,8 @@ class BaseConfig:
       algo (str): Algo to train.
       env_name (str): Environment to use for training.
       env_configs (dict): Additional configs for each of the meta-environments.
+      normalize_obs (bool): Whether to normalize observations.
+      normalize_rew (bool): Whether to normalize observations.
       max_policy_iterations (int): Number of total steps to train over.
       actor_lr (float): Learning rate of the actor.
       critic_lr (float): Learning rate of the critic / value function.
@@ -38,10 +40,14 @@ class BaseConfig:
       checkpoint_all (bool): Whether to checkpoint all models or just the last one.
     """
 
-    # high-level
+    # algo
     algo: str
+
+    # env
     env_name: str
     env_configs: dict
+    norm_observations: bool
+    norm_rewards: bool
 
     # opt / grad clipping
     use_linear_lr_decay: bool
@@ -85,17 +91,35 @@ class BaseConfig:
         Returns:
             None
         """
-        object.__setattr__(self, "_timestamp", int(datetime.timestamp(datetime.now())))
+        self._timestamp = int(datetime.timestamp(datetime.now()))
+        self._wandb_run_id = None
+        pass
 
     @property
-    def timestamp(self) -> int:
+    def run_id(self) -> str:
         """
         Returns a timestamp for the experiment config
 
         Returns:
-            int
+            str
         """
-        return self._timestamp
+        if self._wandb_run_id is not None:
+            return self._wandb_run_id
+
+        return str(self._timestamp)
+
+    @run_id.setter
+    def run_id(self, wandb_run_id: str) -> str:
+        """
+        Returns a timestamp for the experiment config
+
+        Args:
+            wandb_run_id (str): `wandb` run id.
+
+        Returns:
+            str
+        """
+        self._wandb_run_id = wandb_run_id
 
     @property
     def directory(self) -> str:
@@ -105,7 +129,15 @@ class BaseConfig:
         Returns:
           str
         """
-        return f"./results/{self.algo}/{self.env_name.lower()}/run-{self.timestamp}/"
+        folder = self.env_name
+
+        for pos, ch in enumerate(folder):
+            if ch.isupper() and pos > 0:
+                folder = folder.replace(ch, "-%s" % ch.lower())
+            elif ch.isupper():
+                folder = folder.replace(ch, ch.lower())
+
+        return f"./results/{self.algo}/{folder}/run-{self.run_id}/"
 
     @property
     def log_dir(self) -> str:

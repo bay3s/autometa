@@ -7,12 +7,12 @@ from copy import deepcopy
 from gym.envs.registration import EnvSpec
 
 from autometa.envs.base_randomized_env import BaseRandomizedEnv
-from autometa.envs.base_mujoco_meta_env import BaseMujocoMetaEnv
+from autometa.envs.base_randomized_mujoco_env import BaseRandomizedMujocoEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
 
 
 class RLSquaredEnv:
-    def __init__(self, env: Union[BaseRandomizedEnv, BaseMujocoMetaEnv]):
+    def __init__(self, env: Union[BaseRandomizedEnv, BaseRandomizedMujocoEnv]):
         """
         Abstract class that outlines functions required by an environment for meta-learning via RL-Squared.
 
@@ -212,3 +212,13 @@ class RLSquaredEnv:
             List[RandomizedParameter]
         """
         return self._wrapped_env.randomizable_parameters()
+
+    def render(self, mode: str = None):
+        """
+        Args:
+            mode (str): Mode in which to render the environment.
+
+        Returns:
+            None
+        """
+        return self._wrapped_env.render(mode)

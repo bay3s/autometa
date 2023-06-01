@@ -7,7 +7,7 @@ import autometa.utils.logging_utils as logging_utils
 from autometa.training.rl_squared.rl_squared_config import RLSquaredConfig
 from autometa.learners.ppo import PPO
 
-from autometa.utils.env_utils import make_vec_envs
+from autometa.utils.env_utils import make_vec_envs, get_vec_normalize
 from autometa.utils.training_utils import (
     sample_rl_squared,
     save_checkpoint,
@@ -59,6 +59,7 @@ class RLSquaredTrainer:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
             wandb.init(project=f"autometa{project_suffix}", config=self.config.dict)
+            self.config.run_id = wandb.run.id
             pass
 
         # seed
@@ -76,6 +77,9 @@ class RLSquaredTrainer:
             self.config.random_seed,
             self.config.num_processes,
             self.device,
+            self.config.discount_gamma,
+            self.config.norm_observations,
+            self.config.norm_rewards,
         )
 
         actor_critic = StatefulActorCritic(
@@ -101,11 +105,18 @@ class RLSquaredTrainer:
 
         # load
         if self._restart_checkpoint:
-            checkpoint = torch.load(self._restart_checkpoint)
+            checkpoint = torch.load(self._restart_checkpoint, map_location=self.device)
             current_iteration = checkpoint["iteration"]
+
+            # policy / ppo
             actor_critic.actor.load_state_dict(checkpoint["actor"])
             actor_critic.critic.load_state_dict(checkpoint["critic"])
             ppo.optimizer.load_state_dict(checkpoint["optimizer"])
+
+            # rms
+            vec_normalized = get_vec_normalize(rl_squared_envs)
+            vec_normalized.obs_rms = checkpoint["observations_rms"]
+            vec_normalized.ret_rms = checkpoint["rewards_rms"]
             pass
 
         for j in range(current_iteration, self.config.policy_iterations):
@@ -141,10 +152,12 @@ class RLSquaredTrainer:
             }
 
             # checkpoint
-            checkpoint_name = str(timestamp()) if self.config.checkpoint_all else "last"
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % self.config.checkpoint_interval == 0 or is_last_iteration:
+                vec_normalized = get_vec_normalize(rl_squared_envs)
+                checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
+
                 save_checkpoint(
                     iteration=j,
                     checkpoint_dir=self.config.checkpoint_dir,
@@ -152,6 +165,12 @@ class RLSquaredTrainer:
                     actor=actor_critic.actor,
                     critic=actor_critic.critic,
                     optimizer=ppo.optimizer,
+                    observations_rms=(
+                        vec_normalized.obs_rms if vec_normalized is not None else None
+                    ),
+                    rewards_rms=(
+                        vec_normalized.ret_rms if vec_normalized is not None else None
+                    ),
                 )
                 pass
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from autometa.training.base_config import BaseConfig
 
 
-@dataclass(frozen=True)
+@dataclass
 class RLSquaredConfig(BaseConfig):
     """
     Dataclass to keep track of experiment configs.

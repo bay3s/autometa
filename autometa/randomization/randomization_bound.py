@@ -15,6 +15,7 @@ class RandomizationBound:
     value: float
     min_value: float
     max_value: float
+    frozen: bool = False
 
     def __post_init__(self):
         """
@@ -51,3 +52,4 @@ class RandomizationBound:
         """
         if not np.isclose(self.min_value, self.value):
             self.value = max(self.value - delta, self.min_value)
+

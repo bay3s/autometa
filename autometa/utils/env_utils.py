@@ -1,13 +1,32 @@
-from typing import Callable
+from typing import Callable, Union
 
 import torch
 import gym
 
 from gym.envs.registration import register
+from stable_baselines3.common.vec_env.vec_normalize import VecNormalize
 
 from autometa.envs.multiprocessing_vec_env import MultiprocessingVecEnv
 from autometa.envs.pytorch_vec_env_wrapper import PyTorchVecEnvWrapper
 from autometa.envs.rl_squared_env import RLSquaredEnv
+
+
+def get_vec_normalize(venv) -> Union[VecNormalize, None]:
+    """
+    Return the `VecNormalize` wrapper if the current environment is wrapped in it.
+
+    Args:
+        venv (object): Environment in which
+
+    Returns:
+        Union[VecNormalize, None]
+    """
+    if isinstance(venv, VecNormalize):
+        return venv
+    elif hasattr(venv, "venv"):
+        return get_vec_normalize(venv.venv)
+
+    return None
 
 
 def get_render_func(venv: gym.Env):
@@ -15,11 +34,12 @@ def get_render_func(venv: gym.Env):
     Get render function for the environment.
 
     Args:
-        venv (object): Environment in which
+        venv (object): Environment for which to retrieve the render function.
 
     Returns:
         Callable
     """
+    print(venv)
     if hasattr(venv, "envs"):
         return venv.envs[0].render
     elif hasattr(venv, "venv"):
@@ -30,12 +50,7 @@ def get_render_func(venv: gym.Env):
     return None
 
 
-def make_env_thunk(
-    env_name: str,
-    env_configs: dict,
-    seed: int,
-    rank: int,
-) -> Callable:
+def make_env_thunk(env_name: str, env_configs: dict, seed: int, rank: int) -> Callable:
     """
     Returns a callable to create environments based on the specs provided.
 
@@ -79,6 +94,9 @@ def make_vec_envs(
     seed: int,
     num_processes: int,
     device: torch.device,
+    gamma: float,
+    norm_observations: bool,
+    norm_rewards: bool,
 ) -> PyTorchVecEnvWrapper:
     """
     Returns PyTorch compatible vectorized environments.
@@ -89,6 +107,9 @@ def make_vec_envs(
         seed (int): Random seed for environments.
         num_processes (int): Number of parallel processes to be used for simulations.
         device (torch.device): Device to use with PyTorch tensors.
+        gamma (float): Discount factor for the environment.
+        norm_observations (bool): Whether to normalize envinronment observations.
+        norm_rewards (bool): Whether to normalize envinronment rewards.
 
     Returns:
         PyTorchVecEnvWrapper
@@ -99,6 +120,12 @@ def make_vec_envs(
     ]
 
     envs = MultiprocessingVecEnv(envs)
+
+    if norm_observations or norm_rewards:
+        envs = VecNormalize(
+            envs, gamma=gamma, norm_obs=norm_observations, norm_reward=norm_rewards
+        )
+
     envs = PyTorchVecEnvWrapper(envs, device)
 
     return envs
@@ -112,6 +139,16 @@ def register_custom_envs() -> None:
         None
     """
     register(
-        id="PointRobotNavigation-v1",
+        id="Navigation-v1",
         entry_point="autometa.envs.point_robot.navigation_env:NavigationEnv",
+    )
+
+    register(
+        id="CheetahVelocity-v1",
+        entry_point="autometa.envs.cheetah.cheetah_velocity_env:CheetahVelocityEnv",
+    )
+
+    register(
+        id="CheetahSimple-v1",
+        entry_point="autometa.envs.cheetah.simple_cheetah_env:SimpleCheetahEnv",
     )
