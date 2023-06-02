@@ -7,7 +7,6 @@ from autometa.training.rl_squared.rl_squared_trainer import RLSquaredTrainer
 
 from autometa.training.auto_dr.auto_dr_config import AutoDRConfig
 from autometa.training.auto_dr.auto_dr_trainer import AutoDRTrainer
-
 from autometa.utils.env_utils import register_custom_envs
 
 register_custom_envs()
@@ -27,7 +26,7 @@ SUPPORTED_ALGOS = [RL_SQUARED, AUTO_DR]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        prog="AutoMeta",
+        prog="autometa",
         description="Script to run experiments on various meta-learning benchmarks.",
     )
 
@@ -46,10 +45,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--from-checkpoint",
+        "--checkpoint",
         type=str,
         default=None,
-        help="Checkpoint, if any, from which to restart the training run.",
+        help="Absolute checkpoint path, if any, from which to restart the training run.",
     )
 
     parser.add_argument(
@@ -91,12 +90,13 @@ if __name__ == "__main__":
     if args.algo == RL_SQUARED:
         experiment_config = RLSquaredConfig.from_json(config_path)
         trainer = RLSquaredTrainer(
-            experiment_config, restart_checkpoint=args.from_checkpoint
+            config=experiment_config, checkpoint_path=args.checkpoint
         )
         trainer.train(enable_wandb=not args.disable_wandb, is_dev=not args.prod)
     elif args.algo == AUTO_DR:
         experiment_config = AutoDRConfig.from_json(config_path)
-        # @todo add checkpoint
-        trainer = AutoDRTrainer(experiment_config)
+        trainer = AutoDRTrainer(
+            config=experiment_config, checkpoint_path=args.checkpoint
+        )
         trainer.train(enable_wandb=not args.disable_wandb, is_dev=not args.prod)
         pass

@@ -3,9 +3,11 @@ import os
 import json
 from datetime import datetime
 
+from autometa.utils.path_utils import absolute_path as absolute_path_
+
 
 @dataclass
-class BaseConfig:
+class TrainingConfig:
     """
     Base dataclass to keep track of experiment configs.
 
@@ -96,30 +98,27 @@ class BaseConfig:
         pass
 
     @property
-    def run_id(self) -> str:
+    def wandb_run_id(self) -> str:
         """
         Returns a timestamp for the experiment config
 
         Returns:
             str
         """
-        if self._wandb_run_id is not None:
-            return self._wandb_run_id
+        return self._wandb_run_id
 
-        return str(self._timestamp)
-
-    @run_id.setter
-    def run_id(self, wandb_run_id: str) -> str:
+    @wandb_run_id.setter
+    def wandb_run_id(self, value: str) -> str:
         """
         Returns a timestamp for the experiment config
 
         Args:
-            wandb_run_id (str): `wandb` run id.
+            value (str): `wandb` run id.
 
         Returns:
             str
         """
-        self._wandb_run_id = wandb_run_id
+        self._wandb_run_id = value
 
     @property
     def directory(self) -> str:
@@ -137,7 +136,11 @@ class BaseConfig:
             elif ch.isupper():
                 folder = folder.replace(ch, ch.lower())
 
-        return f"./results/{self.algo}/{folder}/run-{self.run_id}/"
+        unique_id = (
+            self.wandb_run_id if self._wandb_run_id is not None else self._timestamp
+        )
+
+        return absolute_path_(f"./results/{self.algo}/{folder}/run-{unique_id}/")
 
     @property
     def log_dir(self) -> str:
@@ -160,12 +163,15 @@ class BaseConfig:
         return f"{self.directory}/checkpoints/"
 
     @classmethod
-    def from_json(cls, json_file_path: str) -> "BaseConfig":
+    def from_json(cls, json_file_path: str) -> "TrainingConfig":
         """
-        Takes the json file path as parameter and returns the populated TrainingConfigs.
+        Takes the json file path as parameter and returns the populated `TrainingConfig`.
+
+        Args:
+            json_file_path (str): JSON file path from which to load the configs.
 
         Returns:
-            BaseConfig
+            TrainingConfig
         """
         keys = [f.name for f in fields(cls)]
         file = json.load(open(json_file_path))
@@ -181,6 +187,21 @@ class BaseConfig:
             str
         """
         return json.dumps(self.__dict__, indent=2)
+
+    @classmethod
+    def from_dict(cls, state_dict: str) -> "TrainingConfig":
+        """
+        Takes the state `dict` as parameter and returns the populated TrainingConfigs.
+
+        Args:
+            state_dict (str): State dict from which to load the configs.
+
+        Returns:
+            TrainingConfig
+        """
+        keys = [f.name for f in fields(cls)]
+
+        return cls(**{key: state_dict[key] for key in keys if key in state_dict})
 
     @property
     def dict(self) -> dict:

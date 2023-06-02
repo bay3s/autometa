@@ -42,6 +42,7 @@ class Randomizer:
         randomizable_params = self.parallel_envs.env_method(
             "randomizable_parameters", indices=0
         )[0]
+
         self.randomized_parameters = self._init_params(randomizable_params)
         self.buffer = RandomizationPerformanceBuffer(
             randomizable_params, buffer_size=buffer_size
@@ -154,7 +155,11 @@ class Randomizer:
         if np.random.uniform(0, 1) <= self.evaluation_probability:
             # param
             sampled_param = random.choice(
-                [param for param in self.randomized_parameters.values() if not param.frozen]
+                [
+                    param
+                    for param in self.randomized_parameters.values()
+                    if not param.frozen
+                ]
             )
 
             # bound

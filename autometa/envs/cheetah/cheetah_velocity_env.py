@@ -13,21 +13,21 @@ from autometa.randomization.randomization_bound import RandomizationBound
 class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
-            name = "target_velocity",
-            lower_bound = RandomizationBound(
-                type = RandomizationBoundType.LOWER_BOUND,
-                value = 0.0,
-                min_value = 0.0,
-                max_value = 0.0,
-                frozen = True
+            name="target_velocity",
+            lower_bound=RandomizationBound(
+                type=RandomizationBoundType.LOWER_BOUND,
+                value=0.0,
+                min_value=0.0,
+                max_value=0.0,
+                frozen=True,
             ),
-            upper_bound = RandomizationBound(
-                type = RandomizationBoundType.UPPER_BOUND,
-                value = 0.0,
-                min_value = 0.0,
-                max_value = 3.0,
+            upper_bound=RandomizationBound(
+                type=RandomizationBoundType.UPPER_BOUND,
+                value=0.0,
+                min_value=0.0,
+                max_value=3.0,
             ),
-            delta = 0.05,
+            delta=0.05,
         ),
     ]
 
@@ -166,14 +166,13 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
 
             target_velocity = self.randomized_parameter("target_velocity")
             task["target_velocity"] = self.np_random.uniform(
-                target_velocity.lower_bound.min_value, target_velocity.upper_bound.max_value
+                target_velocity.lower_bound.min_value,
+                target_velocity.upper_bound.max_value,
             )
             pass
 
         self._target_velocity = np.concatenate(
-            [
-                [task["target_velocity"]]
-            ],
+            [[task["target_velocity"]]],
             dtype=np.float32,
         )
         pass
