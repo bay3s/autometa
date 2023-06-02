@@ -139,8 +139,8 @@ def register_custom_envs() -> None:
         None
     """
     register(
-        id="Navigation-v1",
-        entry_point="autometa.envs.point_robot.navigation_env:NavigationEnv",
+        id="PointNavigation-v1",
+        entry_point="autometa.envs.point_mass.point_navigation_env:PointNavigationEnv",
     )
 
     register(

@@ -11,7 +11,7 @@ from autometa.randomization.randomization_bound_type import RandomizationBoundTy
 from autometa.randomization.randomization_bound import RandomizationBound
 
 
-class NavigationEnv(EzPickle, BaseRandomizedEnv):
+class PointNavigationEnv(EzPickle, BaseRandomizedEnv):
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
             name="x_position",

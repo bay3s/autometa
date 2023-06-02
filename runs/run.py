@@ -12,7 +12,7 @@ from autometa.utils.env_utils import register_custom_envs
 register_custom_envs()
 
 
-POINT_ROBOT_NAV = "point_robot_navigation"
+POINT_NAVIGATION = "point_navigation"
 
 CHEETAH_VELOCITY = "cheetah_velocity"
 CHEETAH_SIMPLE = "cheetah_simple"
@@ -20,7 +20,7 @@ CHEETAH_SIMPLE = "cheetah_simple"
 ANT_NAVIGATION = "ant_navigation"
 
 SUPPORTED_ENVIRONMENTS = [
-    POINT_ROBOT_NAV,
+    POINT_NAVIGATION,
     CHEETAH_VELOCITY,
     CHEETAH_SIMPLE,
     ANT_NAVIGATION,
