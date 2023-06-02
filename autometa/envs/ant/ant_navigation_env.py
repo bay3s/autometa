@@ -205,7 +205,10 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
         self._episode_reward += reward
 
         observation = self._get_obs()
-        terminated = False
+
+        state = self.state_vector()
+
+        terminated = not (np.isfinite(state).all() and 0.2 <= state[2] <= 1.0)
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 
