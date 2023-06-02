@@ -4,12 +4,12 @@ from abc import ABC
 
 import gym
 from gym.spaces import Box
-from gym.envs.mujoco import HalfCheetahEnv as HalfCheetahEnv_
+from gym.envs.mujoco import AntEnv as AntEnv_
 
 from autometa.envs.base_randomized_mujoco_env import BaseRandomizedMujocoEnv
 
 
-class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
+class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
     def __init__(self, seed: int = None):
         """
         Initialize the Mujoco Ant environment for meta-learning.
@@ -18,13 +18,31 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
             seed (int): Random seed.
         """
         BaseRandomizedMujocoEnv.__init__(self, seed)
-        HalfCheetahEnv_.__init__(self)
+        AntEnv_.__init__(self)
 
         # overwrite
         self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(20,), dtype=np.float32
+            low=-np.inf, high=np.inf, shape=(125,), dtype=np.float32
         )
+
+        self._action_scaling = None
         pass
+
+    @property
+    def action_scaling(self):
+        """
+
+        Returns:
+
+        """
+        if (not hasattr(self, 'action_space')) or (self.action_space is None):
+            return 1.0
+
+        if self._action_scaling is None:
+            lb, ub = self.action_space.low, self.action_space.high
+            self._action_scaling = 0.5 * (ub - lb)
+
+        return self._action_scaling
 
     def _get_obs(self) -> np.ndarray:
         """
@@ -36,8 +54,10 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
         return (
             np.concatenate(
                 [
-                    self.sim.data.qpos.flat[1:],
+                    self.sim.data.qpos.flat,
                     self.sim.data.qvel.flat,
+                    np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
+                    self.sim.data.get_body_xmat("torso").flat,
                     self.get_body_com("torso").flat,
                 ]
             )

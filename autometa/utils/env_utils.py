@@ -149,6 +149,7 @@ def register_custom_envs() -> None:
     )
 
     register(
-        id="CheetahSimple-v1",
-        entry_point="autometa.envs.cheetah.simple_cheetah_env:SimpleCheetahEnv",
+        id="AntNavigation-v1",
+        entry_point="autometa.envs.ant.ant_navigation_env:AntNavigationEnv",
     )
+

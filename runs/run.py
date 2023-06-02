@@ -13,10 +13,13 @@ register_custom_envs()
 
 
 POINT_ROBOT_NAV = "point_robot_navigation"
+
 CHEETAH_VELOCITY = "cheetah_velocity"
 CHEETAH_SIMPLE = "cheetah_simple"
 
-SUPPORTED_ENVIRONMENTS = [POINT_ROBOT_NAV, CHEETAH_VELOCITY, CHEETAH_SIMPLE]
+ANT_NAVIGATION = "ant_navigation"
+
+SUPPORTED_ENVIRONMENTS = [POINT_ROBOT_NAV, CHEETAH_VELOCITY, CHEETAH_SIMPLE, ANT_NAVIGATION]
 
 RL_SQUARED = "rl_squared"
 AUTO_DR = "auto_dr"
