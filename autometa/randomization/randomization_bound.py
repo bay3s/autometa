@@ -52,4 +52,3 @@ class RandomizationBound:
         """
         if not np.isclose(self.min_value, self.value):
             self.value = max(self.value - delta, self.min_value)
-

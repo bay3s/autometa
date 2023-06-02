@@ -154,7 +154,11 @@ class Randomizer:
         if np.random.uniform(0, 1) <= self.evaluation_probability:
             # param
             sampled_param = random.choice(
-                [param for param in self.randomized_parameters.values() if not param.frozen]
+                [
+                    param
+                    for param in self.randomized_parameters.values()
+                    if not param.frozen
+                ]
             )
 
             # bound
