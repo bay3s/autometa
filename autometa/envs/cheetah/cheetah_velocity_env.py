@@ -33,7 +33,7 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
 
     def __init__(
         self,
-        episode_length: int = 100,
+        episode_length: int,
         randomizable_parameters: List[RandomizationParameter] = RANDOMIZABLE_PARAMETERS,
         auto_reset: bool = True,
         seed: int = None,

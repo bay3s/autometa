@@ -181,8 +181,7 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
 
     def step(self, action: np.ndarray) -> Tuple:
         """
-        Take a step in the environment and return the corresponding observation, action, reward, plus additional
-        info.
+        Take a step in the environment and return the corresponding observation, action, reward, plus additional info.
 
         Args:
             action (np.ndarray): Action to be taken in the environment.

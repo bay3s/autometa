@@ -12,7 +12,7 @@ class SimpleCheetahEnv(BaseCheetahEnv, EzPickle):
 
     def __init__(
         self,
-        episode_length: int = 100,
+        episode_length: int,
         auto_reset: bool = True,
         seed: int = None,
     ):

@@ -3,7 +3,7 @@
   "env_name": "AntNavigation-v1",
   "random_seed": 4563,
   "env_configs": {
-    "episode_length": 200
+    "episode_length": 250
   },
   "actor_lr": 0.0003,
   "critic_lr": 0.0001,
@@ -13,9 +13,9 @@
   "cuda_deterministic": false,
   "use_cuda": true,
   "policy_iterations": 500,
-  "meta_episode_length": 800,
+  "meta_episode_length": 500,
   "meta_episodes_per_epoch": 100,
-  "num_processes": 1,
+  "num_processes": 25,
   "discount_gamma": 0.97,
   "ppo_opt_epochs": 5,
   "ppo_num_minibatches": 50,
