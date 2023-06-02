@@ -5,9 +5,7 @@ import random
 import gym
 import numpy as np
 
-from autometa.randomization.randomization_performance_buffer import (
-    RandomizationPerformanceBuffer,
-)
+from autometa.randomization.randomization_performance_buffer import RandomizationPerformanceBuffer
 from autometa.randomization.randomization_parameter import RandomizationParameter
 from autometa.randomization.randomization_bound_type import RandomizationBoundType
 from autometa.randomization.randomization_boundary import RandomizationBoundary
@@ -42,6 +40,7 @@ class Randomizer:
         randomizable_params = self.parallel_envs.env_method(
             "randomizable_parameters", indices=0
         )[0]
+
         self.randomized_parameters = self._init_params(randomizable_params)
         self.buffer = RandomizationPerformanceBuffer(
             randomizable_params, buffer_size=buffer_size

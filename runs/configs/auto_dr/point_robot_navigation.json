@@ -29,6 +29,8 @@
   "ppo_value_loss_coef": 0.5,
   "use_gae": true,
   "gae_lambda": 0.99,
+  "norm_observations": true,
+  "norm_rewards": true,
   "checkpoint_interval": 1,
   "checkpoint_all": false
 }

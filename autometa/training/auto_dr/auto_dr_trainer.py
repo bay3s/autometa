@@ -30,6 +30,10 @@ class AutoDRTrainer:
         """
         self.config = config
 
+        # private
+        self._device = None
+        self._log_dir = None
+
         # checkpoint
         if checkpoint_path is not None:
             self.restart_checkpoint = TrainingCheckpoint.load(
@@ -38,10 +42,6 @@ class AutoDRTrainer:
         else:
             self.restart_checkpoint = None
             pass
-
-        # private
-        self._device = None
-        self._log_dir = None
 
         # general
         self.ppo = None
@@ -154,6 +154,10 @@ class AutoDRTrainer:
             vec_normalized = get_vec_normalize(self.vectorized_envs)
             vec_normalized.obs_rms = self.restart_checkpoint.observations_rms
             vec_normalized.ret_rms = self.restart_checkpoint.rewards_rms
+
+            # adr
+            self.randomizer.randomized_parameters = self.restart_checkpoint.randomized_parameters
+            self.randomizer.buffer = self.restart_checkpoint.randomization_buffer
             pass
 
         for j in range(current_iteration, self.config.policy_iterations):
@@ -218,6 +222,7 @@ class AutoDRTrainer:
         checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
 
         checkpoint = TrainingCheckpoint(
+            wandb_run_id = wandb.run.id,
             current_iteration = current_iteration,
             actor_state_dict = self.actor_critic.actor.state_dict(),
             critic_state_dict = self.actor_critic.critic.state_dict(),
@@ -228,6 +233,8 @@ class AutoDRTrainer:
             rewards_rms = (
                 vec_normalized.ret_rms if vec_normalized is not None else None
             ),
+            randomized_parameters = self.randomizer.randomized_parameters,
+            randomization_buffer = self.randomizer.buffer
         )
         checkpoint.save(self.config.checkpoint_dir, checkpoint_name)
         pass

@@ -1,3 +1,4 @@
+from typing import List
 from dataclasses import dataclass
 import os
 import json
@@ -6,7 +7,9 @@ import pathlib
 import torch
 
 from stable_baselines3.common.running_mean_std import RunningMeanStd
-from autometa.randomization.randomizer import Randomizer
+
+from autometa.randomization.randomization_performance_buffer import RandomizationPerformanceBuffer
+from autometa.randomization.randomization_parameter import RandomizationParameter
 
 
 @dataclass
@@ -24,15 +27,22 @@ class TrainingCheckpoint:
         wandb_run_id (str): `wandb` run id.
         randomizer (Randomizer): Randomizer for the environment parameters.
     """
-
+    # logs
     wandb_run_id: str
     current_iteration: int
+
+    # actor-critic / ppo
     actor_state_dict: dict
     critic_state_dict: dict
     optimizer_state_dict: dict
+
+    # rms
     observations_rms: RunningMeanStd
     rewards_rms: RunningMeanStd
-    randomizer: Randomizer = None
+
+    # adr
+    randomized_parameters: List[RandomizationParameter] = None
+    randomization_buffer: RandomizationPerformanceBuffer = None
     pass
 
     @classmethod
@@ -54,7 +64,8 @@ class TrainingCheckpoint:
             optimizer_state_dict=checkpoint_state["optimizer_state_dict"],
             observations_rms=checkpoint_state["observations_rms"],
             rewards_rms=checkpoint_state["rewards_rms"],
-            randomizer = checkpoint_state["randomizer"]
+            randomized_parameters = checkpoint_state["randomized_parameters"],
+            randomization_buffer = checkpoint_state["randomization_buffer"]
         )
 
     @property
@@ -95,7 +106,8 @@ class TrainingCheckpoint:
             "optimizer_state_dict": self.optimizer_state_dict,
             "observations_rms": self.observations_rms,
             "rewards_rms": self.rewards_rms,
-            "randomizer": self.randomizer,
+            "randomized_parameters": self.randomized_parameters,
+            "randomization_buffer": self.randomization_buffer,
         }
 
         # save
