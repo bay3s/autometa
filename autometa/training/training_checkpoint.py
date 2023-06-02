@@ -8,7 +8,9 @@ import torch
 
 from stable_baselines3.common.running_mean_std import RunningMeanStd
 
-from autometa.randomization.randomization_performance_buffer import RandomizationPerformanceBuffer
+from autometa.randomization.randomization_performance_buffer import (
+    RandomizationPerformanceBuffer,
+)
 from autometa.randomization.randomization_parameter import RandomizationParameter
 
 
@@ -27,6 +29,7 @@ class TrainingCheckpoint:
         wandb_run_id (str): `wandb` run id.
         randomizer (Randomizer): Randomizer for the environment parameters.
     """
+
     # logs
     wandb_run_id: str
     current_iteration: int
@@ -57,15 +60,15 @@ class TrainingCheckpoint:
         checkpoint_state = torch.load(absolute_path, map_location=device)
 
         return cls(
-            wandb_run_id = checkpoint_state["wandb_run_id"],
+            wandb_run_id=checkpoint_state["wandb_run_id"],
             current_iteration=checkpoint_state["current_iteration"],
             actor_state_dict=checkpoint_state["actor_state_dict"],
             critic_state_dict=checkpoint_state["critic_state_dict"],
             optimizer_state_dict=checkpoint_state["optimizer_state_dict"],
             observations_rms=checkpoint_state["observations_rms"],
             rewards_rms=checkpoint_state["rewards_rms"],
-            randomized_parameters = checkpoint_state["randomized_parameters"],
-            randomization_buffer = checkpoint_state["randomization_buffer"]
+            randomized_parameters=checkpoint_state["randomized_parameters"],
+            randomization_buffer=checkpoint_state["randomization_buffer"],
         )
 
     @property

@@ -96,7 +96,7 @@ if __name__ == "__main__":
     elif args.algo == AUTO_DR:
         experiment_config = AutoDRConfig.from_json(config_path)
         trainer = AutoDRTrainer(
-            config = experiment_config, checkpoint_path = args.checkpoint
+            config=experiment_config, checkpoint_path=args.checkpoint
         )
         trainer.train(enable_wandb=not args.disable_wandb, is_dev=not args.prod)
         pass

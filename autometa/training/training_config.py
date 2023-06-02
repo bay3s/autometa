@@ -136,11 +136,11 @@ class TrainingConfig:
             elif ch.isupper():
                 folder = folder.replace(ch, ch.lower())
 
-        unique_id = self.wandb_run_id if self._wandb_run_id is not None else self._timestamp
-
-        return absolute_path_(
-            f"./results/{self.algo}/{folder}/run-{unique_id}/"
+        unique_id = (
+            self.wandb_run_id if self._wandb_run_id is not None else self._timestamp
         )
+
+        return absolute_path_(f"./results/{self.algo}/{folder}/run-{unique_id}/")
 
     @property
     def log_dir(self) -> str:

@@ -72,7 +72,10 @@ class RLSquaredTrainer:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
 
-            if self.restart_checkpoint is None or self.restart_checkpoint.wandb_run_id is None:
+            if (
+                self.restart_checkpoint is None
+                or self.restart_checkpoint.wandb_run_id is None
+            ):
                 wandb.init(
                     project=f"autometa{project_suffix}",
                     config=self.config.dict,
@@ -81,7 +84,7 @@ class RLSquaredTrainer:
             else:
                 wandb.init(
                     project=f"autometa{project_suffix}",
-                    id=self.restart_checkpoint.wandb_run_id
+                    id=self.restart_checkpoint.wandb_run_id,
                 )
                 self.config.wandb_run_id = wandb.run.id
                 pass
@@ -132,11 +135,15 @@ class RLSquaredTrainer:
             current_iteration = self.restart_checkpoint.current_iteration
 
             # policy / ppo
-            self.actor_critic.actor.load_state_dict(self.restart_checkpoint.actor_state_dict)
+            self.actor_critic.actor.load_state_dict(
+                self.restart_checkpoint.actor_state_dict
+            )
             self.actor_critic.critic.load_state_dict(
                 self.restart_checkpoint.critic_state_dict
             )
-            self.ppo.optimizer.load_state_dict(self.restart_checkpoint.optimizer_state_dict)
+            self.ppo.optimizer.load_state_dict(
+                self.restart_checkpoint.optimizer_state_dict
+            )
 
             # rms
             vec_normalized = get_vec_normalize(self.vectorized_envs)
@@ -205,17 +212,17 @@ class RLSquaredTrainer:
         checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
 
         checkpoint = TrainingCheckpoint(
-            current_iteration = current_iteration,
-            actor_state_dict = self.actor_critic.actor.state_dict(),
-            critic_state_dict = self.actor_critic.critic.state_dict(),
-            optimizer_state_dict = self.ppo.optimizer.state_dict(),
-            observations_rms = (
+            current_iteration=current_iteration,
+            actor_state_dict=self.actor_critic.actor.state_dict(),
+            critic_state_dict=self.actor_critic.critic.state_dict(),
+            optimizer_state_dict=self.ppo.optimizer.state_dict(),
+            observations_rms=(
                 vec_normalized.obs_rms if vec_normalized is not None else None
             ),
-            rewards_rms = (
+            rewards_rms=(
                 vec_normalized.ret_rms if vec_normalized is not None else None
             ),
-            wandb_run_id = wandb.run.id,
+            wandb_run_id=wandb.run.id,
         )
         checkpoint.save(self.config.checkpoint_dir, checkpoint_name)
         pass
