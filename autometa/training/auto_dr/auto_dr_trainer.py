@@ -76,18 +76,18 @@ class AutoDRTrainer:
             wandb.login()
             project_suffix = "-dev" if is_dev else ""
 
-            if self.restart_checkpoint is None or self.config.wandb_run_id is None:
-                wandb_run_id = wandb.util.generate_id()
-                self.config.wandb_run_id = wandb_run_id
+            if self.restart_checkpoint is None or self.restart_checkpoint.wandb_run_id is None:
                 wandb.init(
                     project=f"autometa{project_suffix}",
                     config=self.config.dict,
-                    id=self.config.wandb_run_id,
                 )
+                self.config.wandb_run_id = wandb.run.id
             else:
                 wandb.init(
-                    project=f"autometa{project_suffix}", id=self.config.wandb_run_id
+                    project=f"autometa{project_suffix}",
+                    id=self.restart_checkpoint.wandb_run_id
                 )
+                self.config.wandb_run_id = wandb.run.id
                 pass
 
         # seed
