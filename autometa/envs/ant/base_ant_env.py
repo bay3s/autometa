@@ -35,7 +35,7 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
 
         """
-        if (not hasattr(self, 'action_space')) or (self.action_space is None):
+        if (not hasattr(self, "action_space")) or (self.action_space is None):
             return 1.0
 
         if self._action_scaling is None:
