@@ -1,9 +1,5 @@
 from dataclasses import dataclass, fields, asdict
-import os
 import json
-from datetime import datetime
-
-from autometa.utils.path_utils import absolute_path as absolute_path_
 
 
 @dataclass
@@ -13,7 +9,7 @@ class BaseTrainingConfig:
 
     Params:
       algo (str): Algo to train.
-      env_name (str): Environment to use for training.
+      env_id (str): Environment to use for training.
       env_configs (dict): Additional configs for each of the meta-environments.
       normalize_obs (bool): Whether to normalize observations.
       normalize_rew (bool): Whether to normalize observations.
@@ -36,17 +32,13 @@ class BaseTrainingConfig:
       ppo_num_minibatches (int): Number of minibatches for PPO
       use_gae (bool): Whether to use generalized advantage estimates.
       gae_lambda (float): Lambda parameter for GAE.
-      log_interval (int): Interval between logging.
-      log_dir (str): Directory to log to.
-      checkpoint_interval (int): Number of updates between each checkpoint.
-      checkpoint_all (bool): Whether to checkpoint all models or just the last one.
     """
 
     # algo
     algo: str
 
     # env
-    env_name: str
+    env_id: str
     env_configs: dict
     norm_observations: bool
     norm_rewards: bool
@@ -80,74 +72,7 @@ class BaseTrainingConfig:
     # advantage
     use_gae: bool
     gae_lambda: bool
-
-    # checkpointing
-    checkpoint_interval: int
-    checkpoint_all: bool
     pass
-
-    def __post_init__(self):
-        """
-        Sets a timestamp for the config.
-
-        Returns:
-            None
-        """
-        self._timestamp = int(datetime.timestamp(datetime.now()))
-        self._wandb_run_id = None
-        pass
-
-    @property
-    def wandb_run_id(self) -> str:
-        """
-        Returns a timestamp for the experiment config
-
-        Returns:
-            str
-        """
-        return self._wandb_run_id
-
-    @property
-    def directory(self) -> str:
-        """
-        Return the directory to store logs.
-
-        Returns:
-          str
-        """
-        folder = self.env_name
-
-        for pos, ch in enumerate(folder):
-            if ch.isupper() and pos > 0:
-                folder = folder.replace(ch, "-%s" % ch.lower())
-            elif ch.isupper():
-                folder = folder.replace(ch, ch.lower())
-
-        unique_id = (
-            self.wandb_run_id if self._wandb_run_id is not None else self._timestamp
-        )
-
-        return absolute_path_(f"./results/{self.algo}/{folder}/run-{unique_id}/")
-
-    @property
-    def log_dir(self) -> str:
-        """
-        Return the directory to store logs.
-
-        Returns:
-            str
-        """
-        return f"{self.directory}/logs/"
-
-    @property
-    def checkpoint_dir(self) -> str:
-        """
-        Returns the directory to store checkpoints.
-
-        Returns:
-            str
-        """
-        return f"{self.directory}/checkpoints/"
 
     @classmethod
     def from_json(cls, json_file_path: str) -> "BaseTrainingConfig":
@@ -165,8 +90,7 @@ class BaseTrainingConfig:
 
         return cls(**{key: file[key] for key in keys if key in file})
 
-    @property
-    def json(self) -> str:
+    def to_json(self) -> str:
         """
         Return JSON string with dataclass fields.
 
@@ -199,16 +123,3 @@ class BaseTrainingConfig:
         """
         return {k: str(v) for k, v in asdict(self).items()}
 
-    def save(self) -> None:
-        """
-        Returns the checkpoint directory.
-
-        Returns:
-            str
-        """
-        if not os.path.exists(self.directory):
-            os.makedirs(self.directory)
-
-        with open(f"{self.directory}/config.json", "w") as outfile:
-            outfile.write(self.json)
-            pass

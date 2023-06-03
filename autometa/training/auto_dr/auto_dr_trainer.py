@@ -19,7 +19,7 @@ from autometa.randomization.randomizer import Randomizer
 
 
 class AutoDRTrainer:
-    def __init__(self, config: AutoDRConfig = None, checkpoint_path: str = None):
+    def __init__(self, config: AutoDRConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 

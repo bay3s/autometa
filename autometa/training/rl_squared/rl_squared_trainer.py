@@ -5,7 +5,6 @@ from autometa.training.base_trainer import BaseTrainer
 from autometa.training.rl_squared.rl_squared_config import RLSquaredConfig
 
 from autometa.utils.env_utils import get_vec_normalize
-from autometa.training.base_training_checkpoint import BaseTrainingCheckpoint
 from autometa.training.rl_squared.rl_squared_checkpoint import RLSquaredCheckpoint
 from autometa.utils.training_utils import (
     sample_rl_squared,
@@ -32,12 +31,12 @@ class RLSquaredTrainer(BaseTrainer):
         Loads relevant info from checkpoint (eg. current iteration, actor-critic state, optimizer state, etc.)
 
         Args:
-                checkpoint_path (str): Absolute path from which to load the checkpoint.
+            checkpoint_path (str): Absolute path from which to load the checkpoint.
 
         Returns:
-                BaseTrainingCheckpoint
+            None
         """
-        self.checkpoint = BaseTrainingCheckpoint.load(checkpoint_path, self.device)
+        self.checkpoint = RLSquaredCheckpoint.load(checkpoint_path, self.device)
         self.current_iteration = self.checkpoint.current_iteration
 
         # policy / ppo
@@ -54,6 +53,7 @@ class RLSquaredTrainer(BaseTrainer):
     def train(
         self,
         checkpoint_interval: int,
+        checkpoint_all: bool,
         enable_wandb: bool,
         is_dev: bool = True,
     ) -> None:
@@ -61,18 +61,20 @@ class RLSquaredTrainer(BaseTrainer):
         Train an agent based on the configs specified by the training parameters.
 
         Args:
-            checkpoint_interval (bool): Number of iterations after which to checkpoint.
+            checkpoint_interval (int): Number of iterations after which to checkpoint.
+            checkpoint_all (bool): Whether to archive all checkpoints.
             enable_wandb (bool): Whether to log to Wandb, `True` by default.
             is_dev (bool): Whether this is a dev run of th experiment.
 
         Returns:
             None
         """
-        # save
-        self.config.save()
-
+        # enable wandb
         if enable_wandb:
             self.wandb_init(is_dev)
+
+        # save
+        self.save_config()
 
         # seed
         torch.manual_seed(self.config.random_seed)
@@ -115,7 +117,8 @@ class RLSquaredTrainer(BaseTrainer):
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
-                self.checkpoint()
+                checkpoint_name = str(timestamp()) if checkpoint_all else ""
+                self.save_checkpoint(checkpoint_name)
                 pass
 
             if enable_wandb:
@@ -129,15 +132,17 @@ class RLSquaredTrainer(BaseTrainer):
             wandb.finish()
         pass
 
-    def save_checkpoint(self) -> None:
+    def save_checkpoint(self, checkpoint_name: str) -> None:
         """
         Save checkpoint.
+
+         Args:
+            checkpoint_name (str): Checkpoint name to be used while saving.
 
         Returns:
             None
         """
         vec_normalized = get_vec_normalize(self.vectorized_envs)
-        checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
 
         checkpoint = RLSquaredCheckpoint(
             current_iteration=self.current_iteration,
@@ -152,5 +157,5 @@ class RLSquaredTrainer(BaseTrainer):
             ),
             wandb_run_id=wandb.run.id,
         )
-        checkpoint.save(self.config.checkpoint_dir, checkpoint_name)
+        checkpoint.save(self.checkpoint_directory, checkpoint_name)
         pass
