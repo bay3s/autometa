@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import List
 from dataclasses import dataclass
 import os
@@ -15,7 +16,7 @@ from autometa.randomization.randomization_parameter import RandomizationParamete
 
 
 @dataclass
-class BaseTrainingCheckpoint:
+class BaseTrainingCheckpoint(ABC):
     """
     Base dataclass to keep track of experiment configs.
 
@@ -50,6 +51,7 @@ class BaseTrainingCheckpoint:
     pass
 
     @classmethod
+    @abstractmethod
     def load(cls, absolute_path: str, device: torch.device) -> "BaseTrainingCheckpoint":
         """
         Load checkpoint from a given
@@ -58,19 +60,7 @@ class BaseTrainingCheckpoint:
             absolute_path (str): Absolute path for loading the checkpoint.
             device (torch.device): Device specification to remap storage locations.
         """
-        checkpoint_state = torch.load(absolute_path, map_location=device)
-
-        return cls(
-            wandb_run_id=checkpoint_state["wandb_run_id"],
-            current_iteration=checkpoint_state["current_iteration"],
-            actor_state_dict=checkpoint_state["actor_state_dict"],
-            critic_state_dict=checkpoint_state["critic_state_dict"],
-            optimizer_state_dict=checkpoint_state["optimizer_state_dict"],
-            observations_rms=checkpoint_state["observations_rms"],
-            rewards_rms=checkpoint_state["rewards_rms"],
-            randomized_parameters=checkpoint_state["randomized_parameters"],
-            randomization_buffer=checkpoint_state["randomization_buffer"],
-        )
+        raise NotImplementedError
 
     @property
     def json(self) -> str:
@@ -81,6 +71,17 @@ class BaseTrainingCheckpoint:
             str
         """
         return json.dumps(self.__dict__, indent=2)
+
+    @property
+    @abstractmethod
+    def checkpoint_data(self) -> dict:
+        """
+        Return data to be saved for the checkpoint.
+
+        Returns:
+            dict
+        """
+        raise NotImplementedError
 
     def save(self, checkpoint_dir: str, checkpoint_name: str) -> None:
         """
@@ -101,19 +102,5 @@ class BaseTrainingCheckpoint:
         else:
             checkpoint_path = f"{checkpoint_dir}/checkpoint.pt"
 
-        # data
-        checkpoint_data = {
-            "wandb_run_id": self.wandb_run_id,
-            "current_iteration": self.current_iteration,
-            "actor_state_dict": self.actor_state_dict,
-            "critic_state_dict": self.critic_state_dict,
-            "optimizer_state_dict": self.optimizer_state_dict,
-            "observations_rms": self.observations_rms,
-            "rewards_rms": self.rewards_rms,
-            "randomized_parameters": self.randomized_parameters,
-            "randomization_buffer": self.randomization_buffer,
-        }
-
-        # save
-        torch.save(checkpoint_data, checkpoint_path)
+        torch.save(self.checkpoint_data, checkpoint_path)
         pass
