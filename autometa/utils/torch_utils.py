@@ -50,6 +50,21 @@ def init_module(
     return module
 
 
+def init_orthogonal(m: nn.Module):
+    """
+    Helper function probides.
+
+    Args:
+        m (nn.Module): Module for orthogonal initialization.
+
+    Returns:
+        nn.Sequential
+    """
+    return init_module(
+        m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2)
+    )
+
+
 def init_mlp(input_size: int, hidden_sizes: List[int]) -> nn.Sequential:
     """
     Initialize the value head for the critic.
@@ -61,18 +76,12 @@ def init_mlp(input_size: int, hidden_sizes: List[int]) -> nn.Sequential:
     Returns:
         nn.Sequential
     """
-
-    def _init_orthogonal(m: nn.Module):
-        return init_module(
-            m, nn.init.orthogonal_, lambda x: nn.init.constant_(x, 0), np.sqrt(2)
-        )
-
     feature_sizes = list([input_size])
     feature_sizes.extend(hidden_sizes)
 
     mlp_modules = list()
     for i in range(len(feature_sizes) - 1):
-        hidden_layer = _init_orthogonal(
+        hidden_layer = init_orthogonal(
             nn.Linear(feature_sizes[i], feature_sizes[i + 1])
         )
 

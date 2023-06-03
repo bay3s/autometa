@@ -23,9 +23,7 @@ class MetaBatchSampler:
         self.action_log_probs = self._concat_attr("action_log_probs")
         self.actions = self._concat_attr("actions")
 
-        self.recurrent_states_actor = self._concat_attr("recurrent_states_actor")
-        self.recurrent_states_critic = self._concat_attr("recurrent_states_critic")
-
+        self.recurrent_states = self._concat_attr("recurrent_states")
         self.done_masks = self._concat_attr("done_masks")
         pass
 
@@ -72,8 +70,7 @@ class MetaBatchSampler:
             old_action_log_probs_batch = []
             adv_targ = []
 
-            recurrent_states_actor_batch = []
-            recurrent_states_critic_batch = []
+            recurrent_states_batch = []
 
             for offset in range(num_envs_per_batch):
                 ind = perm[start_ind + offset]
@@ -87,11 +84,8 @@ class MetaBatchSampler:
                 old_action_log_probs_batch.append(self.action_log_probs[:, ind])
                 adv_targ.append(advantages[:, ind])
 
-                recurrent_states_actor_batch.append(
-                    self.recurrent_states_actor[0:1, ind]
-                )
-                recurrent_states_critic_batch.append(
-                    self.recurrent_states_critic[0:1, ind]
+                recurrent_states_batch.append(
+                    self.recurrent_states[0:1, ind]
                 )
                 pass
 
@@ -107,12 +101,8 @@ class MetaBatchSampler:
             adv_targ = torch.stack(adv_targ, 1)
 
             # recurrent states
-            recurrent_states_actor_batch = torch.stack(
-                recurrent_states_actor_batch, 1
-            ).view(N, -1)
-
-            recurrent_states_critic_batch = torch.stack(
-                recurrent_states_critic_batch, 1
+            recurrent_states_batch = torch.stack(
+                recurrent_states_batch, 1
             ).view(N, -1)
 
             # flatten the (T, N, ...) tensors to (T * N, ...)
@@ -125,7 +115,7 @@ class MetaBatchSampler:
 
             adv_targ = _flatten(T, N, adv_targ)
 
-            yield obs_batch, recurrent_states_actor_batch, recurrent_states_critic_batch, actions_batch, value_preds_batch, return_batch, done_masks_batch, old_action_log_probs_batch, adv_targ
+            yield obs_batch, recurrent_states_batch, actions_batch, value_preds_batch, return_batch, done_masks_batch, old_action_log_probs_batch, adv_targ
 
 
 def _flatten(T: int, N: int, _tensor: torch.Tensor) -> torch.Tensor:

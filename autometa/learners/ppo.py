@@ -122,8 +122,7 @@ class PPO:
             for sample in minibatches:
                 (
                     obs_batch,
-                    actor_states_batch,
-                    critic_states_batch,
+                    recurrent_states_batch,
                     actions_batch,
                     value_preds_batch,
                     return_batch,
@@ -138,7 +137,7 @@ class PPO:
                     action_log_probs,
                     entropy,
                 ) = self.actor_critic.evaluate_actions(
-                    obs_batch, actions_batch, actor_states_batch, critic_states_batch
+                    obs_batch, actions_batch, recurrent_states_batch
                 )
 
                 ratio = torch.exp(action_log_probs - old_action_log_probs_batch)

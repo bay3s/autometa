@@ -16,7 +16,6 @@ class GRU(nn.Module):
             recurrent_state_size (int): Size of the recurrent state.
         """
         nn.Module.__init__(self)
-
         self._gru = init_gru(input_size, recurrent_state_size)
         pass
 

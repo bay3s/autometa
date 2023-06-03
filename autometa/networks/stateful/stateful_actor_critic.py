@@ -1,22 +1,24 @@
-from typing import Tuple
+from typing import Tuple, Union, List
 
 import torch
+import torch.nn as nn
 import gym
 
 from autometa.networks.base_actor_critic import BaseActorCritic
-from autometa.networks.stateful.stateful_actor import StatefulActor
-from autometa.networks.stateful.stateful_critic import StatefulCritic
+from autometa.utils.torch_utils import init_orthogonal
+from autometa.networks.modules.distributions import Categorical, DiagonalGaussian
+from autometa.networks.modules.memory.gru import GRU
+from autometa.utils.torch_utils import init_mlp
 
-from autometa.networks.base_actor import BaseActor
-from autometa.networks.base_critic import BaseCritic
 
+class StatefulActorCritic(nn.Module, BaseActorCritic):
 
-class StatefulActorCritic(BaseActorCritic):
     def __init__(
         self,
         observation_space: gym.Space,
         action_space: gym.Space,
         recurrent_state_size: int,
+        hidden_sizes: List = [256, 256],
     ):
         """
         Actor-Critic for a discrete action space.
@@ -26,87 +28,77 @@ class StatefulActorCritic(BaseActorCritic):
           action_space (gym.Space): Action space in which the agent operates.
           recurrent_state_size (int): Recurrent state size.
         """
-        super(StatefulActorCritic, self).__init__(observation_space, action_space)
+        nn.Module.__init__(self)
+        BaseActorCritic.__init__(self, observation_space, action_space)
 
-        self._actor = StatefulActor(
-            observation_space=observation_space,
-            action_space=action_space,
-            recurrent_state_size=recurrent_state_size,
-            hidden_sizes=[256],
-        )
+        # base
+        self.gru = GRU(observation_space.shape[0], recurrent_state_size)
 
-        self._critic = StatefulCritic(
-            observation_space=observation_space,
-            recurrent_state_size=recurrent_state_size,
-            hidden_sizes=[256],
-        )
+        # actor
+        self.actor = init_mlp(recurrent_state_size, hidden_sizes=hidden_sizes)
+        self.actor_dist = self._init_dist(hidden_sizes[-1], action_space=action_space)
 
+        # critic
+        self.critic = init_mlp(recurrent_state_size, hidden_sizes=hidden_sizes)
+        self.critic_linear = init_orthogonal(nn.Linear(hidden_sizes[-1], 1))
+
+        # private
         self._recurrent_state_size = recurrent_state_size
         self._device = None
         pass
 
-    @property
-    def actor(self) -> BaseActor:
+    def base(
+        self,
+        observations: torch.Tensor,
+        recurrent_states: torch.Tensor,
+        recurrent_state_masks: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Return the actor network.
+        Conduct the forward pass for the base modules for the actor critic.
+
+        Args:
+            observations (torch.Tensor): State in which to take an action.
+            recurrent_states (torch.Tensor): Recurrent states for the actor-critic.
+            recurrent_state_masks (torch.Tensor): Recurrent states masks for the actor-critic.
 
         Returns:
-          BaseActor
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
         """
-        return self._actor
+        x, recurrent_states = self.gru(
+            observations, recurrent_states, recurrent_state_masks, self._device
+        )
 
-    @property
-    def critic(self) -> BaseCritic:
-        """
-        Return the critic network.
+        hidden_critic = self.critic(x)
+        hidden_actor = self.actor(x)
+        value_estimates = self.critic_linear(hidden_critic)
 
-        Returns:
-          BaseCritic
-        """
-        return self._critic
-
-    def to_device(self, device: torch.device) -> "StatefulActorCritic":
-        """
-        Performs device conversion on the actor and critic.
-
-        Returns:
-          StatefulActorCritic
-        """
-        self._device = device
-        self._actor.to(device)
-        self._critic.to(device)
-
-        return self
+        return value_estimates, hidden_actor, recurrent_states
 
     def act(
         self,
         observations: torch.Tensor,
-        recurrent_states_actor: torch.Tensor,
-        recurrent_states_critic: torch.Tensor,
+        recurrent_states: torch.Tensor,
         recurrent_state_masks: torch.Tensor = None,
         deterministic: bool = False,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Given a state return the action to take, log probability of said action, and the current state value
         computed by the critic.
 
         Args:
           observations (torch.Tensor): State in which to take an action.
-          recurrent_states_actor (torch.Tensor): Recurrent states for the actor.
-          recurrent_states_critic (torch.Tensor): Recurrent states for the critic.
-          recurrent_state_masks (torch.Tensor): Masks to be applied to the recurrent states.
+          recurrent_states (torch.Tensor): Recurrent states for the actor-critic.
+          recurrent_state_masks (torch.Tensor): Recurrent states masks for the actor-critic.
           deterministic (bool): Whether to choose actions deterministically.
 
         Returns:
-          Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
+          Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
         """
-        value_estimate, recurrent_states_critic = self.critic(
-            observations, recurrent_states_critic, recurrent_state_masks, self._device
+        value_estimates, actor_features, recurrent_states = self.base(
+            observations, recurrent_states, recurrent_state_masks
         )
 
-        action_distribution, recurrent_states_actor = self.actor(
-            observations, recurrent_states_actor, recurrent_state_masks, self._device
-        )
+        action_distribution = self.actor_dist(actor_features)
 
         actions = (
             action_distribution.mode()
@@ -115,17 +107,16 @@ class StatefulActorCritic(BaseActorCritic):
         )
 
         return (
-            value_estimate,
+            value_estimates,
             actions,
             action_distribution.log_probs(actions),
-            recurrent_states_actor,
-            recurrent_states_critic,
+            recurrent_states,
         )
 
     def get_value(
         self,
         observations: torch.Tensor,
-        recurrent_states_critic: torch.Tensor,
+        recurrent_states: torch.Tensor,
         recurrent_state_masks: torch.Tensor = None,
     ) -> torch.Tensor:
         """
@@ -133,22 +124,21 @@ class StatefulActorCritic(BaseActorCritic):
 
         Args:
           observations (torch.Tensor): State in which to take an action.
-          recurrent_states_critic (torch.Tensor): Recurrent states that are being used in memory-based policies.
+          recurrent_states (torch.Tensor): Recurrent states that are being used in memory-based policies.
           recurrent_state_masks (torch.Tensor): Masks to be applied to the recurrent states.
 
         Returns:
           torch.Tensor
         """
-        return self.critic(
-            observations, recurrent_states_critic, recurrent_state_masks, self._device
-        )
+        value_estimates, _, _ = self.base(observations, recurrent_states, recurrent_state_masks)
+
+        return value_estimates
 
     def evaluate_actions(
         self,
         inputs: torch.Tensor,
         actions: torch.Tensor,
-        recurrent_states_actor: torch.Tensor,
-        recurrent_states_critic: torch.Tensor,
+        recurrent_states: torch.Tensor,
         recurrent_state_masks: torch.Tensor = None,
     ) -> Tuple:
         """
@@ -157,24 +147,19 @@ class StatefulActorCritic(BaseActorCritic):
         Args:
             inputs (torch.Tensor): Inputs to the actor and the critic.
             actions (torch.Tensor): Actions taken at each timestep.
-            recurrent_states_actor (torch.Tensor): Recurrent states for the actor.
-            recurrent_states_critic (torch.Tensor): Recurrent states for the critic.
+            recurrent_states (torch.Tensor): Recurrent states for the actor-critic.
             recurrent_state_masks (torch.Tensor): Masks to be applied to the recurrent states.
 
         Returns:
             Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
         """
-        value, _ = self.critic(
-            inputs, recurrent_states_critic, recurrent_state_masks, self._device
-        )
-        dist, _ = self.actor(
-            inputs, recurrent_states_actor, recurrent_state_masks, self._device
-        )
+        value_estimates, actor_features, rnn_hxs = self.base(inputs, recurrent_states, recurrent_state_masks)
+        action_distribution = self.actor_dist(actor_features)
 
-        log_probs = dist.log_probs(actions)
-        dist_entropy = dist.entropy().mean()
+        action_log_probs = action_distribution.log_probs(actions)
+        dist_entropy = action_distribution.entropy().mean()
 
-        return value, log_probs, dist_entropy
+        return value_estimates, action_log_probs, dist_entropy, rnn_hxs
 
     @property
     def recurrent_state_size(self) -> int:
@@ -194,3 +179,34 @@ class StatefulActorCritic(BaseActorCritic):
           None
         """
         raise NotImplementedError
+
+    def _init_dist(
+        self, last_hidden_size: int, action_space: gym.Space
+    ) -> Union[Categorical, DiagonalGaussian]:
+        """
+        Initialize the action distribution.
+
+        Args:
+            last_hidden_size (int): Size of the last hidden layer in the MLP.
+            action_space (gym.Space): Action space for the actor.
+
+        Returns:
+            Union[Categorical, DiagonalGaussian]
+        """
+        if action_space.__class__.__name__ == "Discrete":
+            return Categorical(last_hidden_size, action_space.n)
+        elif action_space.__class__.__name__ == "Box":
+            return DiagonalGaussian(last_hidden_size, action_space.shape[0])
+        else:
+            raise NotImplementedError
+
+    def to_device(self, device: torch.device) -> "BaseActorCritic":
+        """
+        Performse device conversion on the actor and critic.
+
+        Returns:
+          BaseCritic
+        """
+        self._device = device
+
+        return self.to(device)
