@@ -139,8 +139,8 @@ def register_custom_envs() -> None:
         None
     """
     register(
-        id="Navigation-v1",
-        entry_point="autometa.envs.point_robot.navigation_env:NavigationEnv",
+        id="PointNavigation-v1",
+        entry_point="autometa.envs.point_mass.point_navigation_env:PointNavigationEnv",
     )
 
     register(
@@ -149,6 +149,6 @@ def register_custom_envs() -> None:
     )
 
     register(
-        id="CheetahSimple-v1",
-        entry_point="autometa.envs.cheetah.simple_cheetah_env:SimpleCheetahEnv",
+        id="AntNavigation-v1",
+        entry_point="autometa.envs.ant.ant_navigation_env:AntNavigationEnv",
     )

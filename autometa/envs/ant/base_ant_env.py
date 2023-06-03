@@ -4,12 +4,12 @@ from abc import ABC
 
 import gym
 from gym.spaces import Box
-from gym.envs.mujoco import HalfCheetahEnv as HalfCheetahEnv_
+from gym.envs.mujoco import AntEnv as AntEnv_
 
 from autometa.envs.base_randomized_mujoco_env import BaseRandomizedMujocoEnv
 
 
-class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
+class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
     def __init__(self, seed: int = None):
         """
         Initialize the Mujoco Ant environment for meta-learning.
@@ -18,12 +18,14 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
             seed (int): Random seed.
         """
         BaseRandomizedMujocoEnv.__init__(self, seed)
-        HalfCheetahEnv_.__init__(self)
+        AntEnv_.__init__(self)
 
         # overwrite
         self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(20,), dtype=np.float32
+            low=-np.inf, high=np.inf, shape=(125,), dtype=np.float32
         )
+
+        self._action_scaling = None
         pass
 
     def _get_obs(self) -> np.ndarray:
@@ -36,8 +38,10 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
         return (
             np.concatenate(
                 [
-                    self.sim.data.qpos.flat[1:],
+                    self.sim.data.qpos.flat,
                     self.sim.data.qvel.flat,
+                    np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
+                    self.sim.data.get_body_xmat("torso").flat,
                     self.get_body_com("torso").flat,
                 ]
             )
@@ -93,6 +97,34 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
             gym.Space
         """
         self._action_space = value
+
+    def viewer_setup(self) -> None:
+        """
+        Set up the viewer for rendering the environment.
+
+        Returns:
+            None
+        """
+        camera_id = self.model.camera_name2id("track")
+        self.viewer.cam.type = 2
+        self.viewer.cam.fixedcamid = camera_id
+        self.viewer.cam.distance = self.model.stat.extent * 0.35
+        self.viewer._hide_overlay = True
+
+    def render(self, mode: str = "human"):
+        """
+        Render the enevironment.
+
+        Args:
+            mode (str): Mode in which to render the environment.
+
+        Returns:
+            None
+        """
+        if mode == "human":
+            self._get_viewer(mode).render()
+        else:
+            raise NotImplementedError(f"`render` not implemented for `{mode}` mode.")
 
     def viewer_setup(self) -> None:
         """
