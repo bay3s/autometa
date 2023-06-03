@@ -76,9 +76,6 @@ class PPO:
             None
         """
         for param_group in self.optimizer.param_groups:
-            if param_group["name"] != self.OPT_ACTOR_PARAMS:
-                continue
-
             lr = self.initial_actor_lr - (
                 self.initial_actor_lr * (current_epoch / float(total_epochs))
             )
