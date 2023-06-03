@@ -16,7 +16,7 @@ from autometa.sampling.meta_batch_sampler import MetaBatchSampler
 
 
 class RLSquaredTrainer(BaseTrainer):
-    def __init__(self, config: RLSquaredConfig = None, checkpoint_path: str = None):
+    def __init__(self, config: RLSquaredConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 

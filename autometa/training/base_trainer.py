@@ -11,7 +11,7 @@ from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 
 
 class BaseTrainer(ABC):
-    def __init__(self, config: BaseTrainingConfig = None, checkpoint_path: str = None):
+    def __init__(self, config: BaseTrainingConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 
