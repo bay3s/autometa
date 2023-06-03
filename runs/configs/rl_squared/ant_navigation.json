@@ -1,6 +1,6 @@
 {
   "algo": "rl_squared",
-  "env_name": "AntNavigation-v1",
+  "env_id": "AntNavigation-v1",
   "random_seed": 4563,
   "env_configs": {
     "episode_length": 250
@@ -24,8 +24,6 @@
   "ppo_value_loss_coef": 0.5,
   "use_gae": true,
   "gae_lambda": 0.90,
-  "checkpoint_interval": 1,
-  "checkpoint_all": false,
   "norm_observations": true,
   "norm_rewards": true
 }
