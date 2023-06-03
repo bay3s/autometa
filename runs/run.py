@@ -75,6 +75,22 @@ if __name__ == "__main__":
         help=f"Whether this a production run of the experiment.",
     )
 
+    parser.add_argument(
+        "--checkpoint-all",
+        type=bool,
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help=f"Whether to save all the checkpoints or just the last one.",
+    )
+
+    parser.add_argument(
+        "--checkpoint-interval",
+        type=int,
+        default=1,
+        action=argparse.BooleanOptionalAction,
+        help=f"Iteration interval between two consecutive checkpoints.",
+    )
+
     # args
     args = parser.parse_args()
 
@@ -94,17 +110,21 @@ if __name__ == "__main__":
         f"{os.path.dirname(__file__)}/configs/{args.algo}/{args.env_name}.json"
     )
 
+    # config
+    config_cls = RLSquaredConfig if args.algo == RL_SQUARED else AutoDRConfig
+    training_config = config_cls.from_json(config_path)
+
+    # trainer
+    trainer_cls = RLSquaredTrainer if args.algo == RL_SQUARED else AutoDRTrainer
+    trainer = trainer_cls(
+        config=training_config, checkpoint_path=args.checkpoint
+    )
+
     # train
-    if args.algo == RL_SQUARED:
-        experiment_config = RLSquaredConfig.from_json(config_path)
-        trainer = RLSquaredTrainer(
-            config=experiment_config, checkpoint_path=args.checkpoint
-        )
-        trainer.train(enable_wandb=not args.disable_wandb, is_dev=not args.prod)
-    elif args.algo == AUTO_DR:
-        experiment_config = AutoDRConfig.from_json(config_path)
-        trainer = AutoDRTrainer(
-            config=experiment_config, checkpoint_path=args.checkpoint
-        )
-        trainer.train(enable_wandb=not args.disable_wandb, is_dev=not args.prod)
-        pass
+    trainer.train(
+        enable_wandb=not args.disable_wandb,
+        is_dev=not args.prod,
+        checkpoint_interval=args.checkpoint_interval,
+        checkpoint_all = args.checkpoint_all
+    )
+    pass
