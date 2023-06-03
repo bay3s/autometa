@@ -136,6 +136,7 @@ class PPO:
                     values,
                     action_log_probs,
                     entropy,
+                    _
                 ) = self.actor_critic.evaluate_actions(
                     obs_batch, actions_batch, recurrent_states_batch
                 )

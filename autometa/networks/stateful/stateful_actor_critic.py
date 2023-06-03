@@ -153,13 +153,13 @@ class StatefulActorCritic(nn.Module, BaseActorCritic):
         Returns:
             Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
         """
-        value_estimates, actor_features, rnn_hxs = self.base(inputs, recurrent_states, recurrent_state_masks)
+        value_estimates, actor_features, recurrent_states = self.base(inputs, recurrent_states, recurrent_state_masks)
         action_distribution = self.actor_dist(actor_features)
 
         action_log_probs = action_distribution.log_probs(actions)
         dist_entropy = action_distribution.entropy().mean()
 
-        return value_estimates, action_log_probs, dist_entropy, rnn_hxs
+        return value_estimates, action_log_probs, dist_entropy, recurrent_states
 
     @property
     def recurrent_state_size(self) -> int:
