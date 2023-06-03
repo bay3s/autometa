@@ -98,7 +98,7 @@ class BaseTrainingCheckpoint(ABC):
             pathlib.Path(checkpoint_dir).mkdir(parents=True, exist_ok=True)
 
         if checkpoint_name:
-            checkpoint_path = f"{checkpoint_dir}/checkpoint-{checkpoint_name}.pt"
+            checkpoint_path = f"{checkpoint_dir}/{checkpoint_name}.pt"
         else:
             checkpoint_path = f"{checkpoint_dir}/checkpoint.pt"
 

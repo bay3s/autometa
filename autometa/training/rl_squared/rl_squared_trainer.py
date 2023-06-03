@@ -117,7 +117,8 @@ class RLSquaredTrainer(BaseTrainer):
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
-                checkpoint_name = str(timestamp()) if checkpoint_all else ""
+                checkpoint_suffix = str(timestamp()) if checkpoint_all else ""
+                checkpoint_name = f"checkpoint-{checkpoint_suffix}"
                 self.save_checkpoint(checkpoint_name)
                 pass
 
