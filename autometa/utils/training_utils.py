@@ -71,8 +71,7 @@ def sample_auto_dr(
                 recurrent_states_critic,
             ) = actor_critic.act(
                 meta_episodes.obs[step].to(device),
-                meta_episodes.recurrent_states_actor[step].to(device),
-                meta_episodes.recurrent_states_critic[step].to(device),
+                meta_episodes.recurrent_states[step].to(device),
             )
 
             obs, rewards, dones, infos = randomizer.step(actions)
@@ -102,9 +101,9 @@ def sample_auto_dr(
             total_env_steps += num_parallel_envs
             pass
 
-        next_value_pred, _ = actor_critic.get_value(
+        next_value_pred = actor_critic.get_value(
             meta_episodes.obs[-1].to(device),
-            meta_episodes.recurrent_states_critic[-1].to(device),
+            meta_episodes.recurrent_states[-1].to(device),
         )
 
         next_value_pred.detach()
@@ -178,12 +177,10 @@ def sample_rl_squared(
                 value_preds,
                 actions,
                 action_log_probs,
-                recurrent_states_actor,
-                recurrent_states_critic,
+                recurrent_states,
             ) = actor_critic.act(
                 meta_episodes.obs[step].to(device),
-                meta_episodes.recurrent_states_actor[step].to(device),
-                meta_episodes.recurrent_states_critic[step].to(device),
+                meta_episodes.recurrent_states[step].to(device),
             )
 
             obs, rewards, dones, infos = rl_squared_envs.step(actions)
@@ -200,8 +197,7 @@ def sample_rl_squared(
             # insert
             meta_episodes.insert(
                 obs,
-                recurrent_states_actor,
-                recurrent_states_critic,
+                recurrent_states,
                 actions,
                 action_log_probs,
                 value_preds,
@@ -213,9 +209,9 @@ def sample_rl_squared(
             total_env_steps += num_parallel_envs
             pass
 
-        next_value_pred, _ = actor_critic.get_value(
+        next_value_pred = actor_critic.get_value(
             meta_episodes.obs[-1].to(device),
-            meta_episodes.recurrent_states_critic[-1].to(device),
+            meta_episodes.recurrent_states[-1].to(device),
         )
 
         next_value_pred.detach()

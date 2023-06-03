@@ -2,7 +2,7 @@ import argparse
 import os
 import torch
 
-from autometa.training.base_config import BaseConfig
+from autometa.training.base_training_config import BaseTrainingConfig
 
 from autometa.utils.env_utils import (
     make_vec_envs,
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # config
     config_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.run}/config.json"
-    configs = BaseConfig.from_json(config_path)
+    configs = BaseTrainingConfig.from_json(config_path)
 
     # checkpoint
     checkpoint_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.run}/model.pt"
@@ -95,8 +95,8 @@ if __name__ == "__main__":
     # render
     vectorized_envs.reset()
 
-    recurrent_states_actor = torch.zeros(1, actor_critic.recurrent_state_size)
-    recurrent_states_critic = torch.zeros(1, actor_critic.recurrent_state_size)
+    # recurrent states
+    recurrent_states = torch.zeros(1, actor_critic.recurrent_state_size)
     recurrent_masks = torch.zeros(1, 1)
 
     obs = vectorized_envs.reset()
@@ -109,12 +109,10 @@ if __name__ == "__main__":
                 value,
                 action,
                 _,
-                recurrent_states_actor,
-                recurrent_states_critic,
+                recurrent_states
             ) = actor_critic.act(
                 observations=obs,
-                recurrent_states_actor=recurrent_states_actor,
-                recurrent_states_critic=recurrent_states_critic,
+                recurrent_states=recurrent_states,
                 recurrent_state_masks=recurrent_masks,
                 deterministic=args.deterministic,
             )
