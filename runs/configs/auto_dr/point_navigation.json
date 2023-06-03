@@ -30,5 +30,5 @@
   "adr_performance_buffer_size": 25,
   "adr_performance_threshold_lower": -250,
   "adr_performance_threshold_upper": -40,
-  "adr_delta": 0.05,
+  "adr_delta": 0.05
 }

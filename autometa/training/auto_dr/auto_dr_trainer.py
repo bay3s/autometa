@@ -1,118 +1,30 @@
-import os
-
 import torch
 import wandb
 
+from autometa.training.base_trainer import BaseTrainer
 from autometa.training.auto_dr.auto_dr_config import AutoDRConfig
-from autometa.learners.ppo import PPO
 
-from autometa.utils.env_utils import make_vec_envs, get_vec_normalize
+from autometa.utils.env_utils import get_vec_normalize
+from autometa.training.auto_dr.auto_dr_checkpoint import AutoDRCheckpoint
 from autometa.utils.training_utils import (
     sample_auto_dr,
     timestamp,
 )
 
-from autometa.training.auto_dr.auto_dr_checkpoint import AutoDRCheckpoint
 from autometa.sampling.meta_batch_sampler import MetaBatchSampler
-from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 from autometa.randomization.randomizer import Randomizer
 
 
-class AutoDRTrainer:
+class AutoDRTrainer(BaseTrainer):
     def __init__(self, config: AutoDRConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 
         Args:
             config (AutoDRConfig): Params to be used for the trainer.
-            checkpoint_path (str): Checkpoint path from where to restart the experiment.
+            checkpoint_path (str): Checkpoint path from which to restart.
         """
-        self.config = config
-
-        # private
-        self._device = None
-        self._log_dir = None
-
-        # checkpoint
-        if checkpoint_path is not None:
-            self.restart_checkpoint = AutoDRCheckpoint.load(
-                checkpoint_path, self.device
-            )
-        else:
-            self.restart_checkpoint = None
-            pass
-
-        # general
-        self.ppo = None
-        self.vectorized_envs = None
-        self.actor_critic = None
-
-        # randomization
-        self.randomizer = None
-        pass
-
-    def train(
-        self,
-        checkpoint_interval: int = 1,
-        enable_wandb: bool = True,
-        is_dev: bool = True,
-    ) -> None:
-        """
-        Train an agent based on the configs specified by the training parameters.
-
-        Args:
-            checkpoint_interval (bool): Number of iterations after which to checkpoint.
-            enable_wandb (bool): Whether to log to Wandb, `True` by default.
-            is_dev (bool): Whether this is a dev run of th experiment.
-
-        Returns:
-            None
-        """
-        # log
-        self.config.save()
-
-        if enable_wandb:
-            wandb.login()
-            project_suffix = "-dev" if is_dev else ""
-
-            if (
-                self.restart_checkpoint is None
-                or self.restart_checkpoint.wandb_run_id is None
-            ):
-                wandb.init(
-                    project=f"autometa{project_suffix}",
-                    config=self.config.dict,
-                )
-                self.config.wandb_run_id = wandb.run.id
-            else:
-                wandb.init(
-                    project=f"autometa{project_suffix}",
-                    id=self.restart_checkpoint.wandb_run_id,
-                )
-                self.config.wandb_run_id = wandb.run.id
-                pass
-
-        # seed
-        torch.manual_seed(self.config.random_seed)
-        torch.cuda.manual_seed_all(self.config.random_seed)
-        torch.set_num_threads(1)
-
-        self.vectorized_envs = make_vec_envs(
-            self.config.env_name,
-            self.config.env_configs,
-            self.config.random_seed,
-            self.config.num_processes,
-            self.device,
-            self.config.discount_gamma,
-            norm_rewards=self.config.norm_rewards,
-            norm_observations=self.config.norm_observations,
-        )
-
-        self.actor_critic = StatefulActorCritic(
-            self.vectorized_envs.observation_space,
-            self.vectorized_envs.action_space,
-            recurrent_state_size=256,
-        ).to_device(self.device)
+        super().__init__(config, checkpoint_path)
 
         self.randomizer = Randomizer(
             parallel_envs=self.vectorized_envs,
@@ -122,50 +34,68 @@ class AutoDRTrainer:
             performance_threshold_upper=self.config.adr_performance_threshold_upper,
             delta=self.config.adr_delta,
         )
+        pass
 
-        self.ppo = PPO(
-            actor_critic=self.actor_critic,
-            clip_param=self.config.ppo_clip_param,
-            opt_epochs=self.config.ppo_opt_epochs,
-            num_minibatches=self.config.ppo_num_minibatches,
-            value_loss_coef=self.config.ppo_value_loss_coef,
-            entropy_coef=self.config.ppo_entropy_coef,
-            actor_lr=self.config.actor_lr,
-            critic_lr=self.config.critic_lr,
-            eps=self.config.optimizer_eps,
-            max_grad_norm=self.config.max_grad_norm,
-        )
+    def load_checkpoint(self, checkpoint_path: str) -> None:
+        """
+        Loads relevant info from checkpoint (eg. current iteration, actor-critic state, optimizer state, etc.)
 
-        current_iteration = 0
+        Args:
+            checkpoint_path (str): Absolute path from which to load the checkpoint.
 
-        # load
-        if self.restart_checkpoint:
-            current_iteration = self.restart_checkpoint.current_iteration
+        Returns:
+            None
+        """
+        self.checkpoint = AutoDRCheckpoint.load(checkpoint_path, self.device)
+        self.current_iteration = self.checkpoint.current_iteration
 
-            # policy / ppo
-            self.actor_critic.actor.load_state_dict(
-                self.restart_checkpoint.actor_state_dict
-            )
-            self.actor_critic.critic.load_state_dict(
-                self.restart_checkpoint.critic_state_dict
-            )
-            self.ppo.optimizer.load_state_dict(
-                self.restart_checkpoint.optimizer_state_dict
-            )
+        # policy / ppo
+        self.actor_critic.actor.load_state_dict(self.checkpoint.actor_state_dict)
+        self.actor_critic.critic.load_state_dict(self.checkpoint.critic_state_dict)
+        self.ppo.optimizer.load_state_dict(self.checkpoint.optimizer_state_dict)
 
-            # rms
-            vec_normalized = get_vec_normalize(self.vectorized_envs)
-            vec_normalized.obs_rms = self.restart_checkpoint.observations_rms
-            vec_normalized.ret_rms = self.restart_checkpoint.rewards_rms
+        # rms
+        vec_normalized = get_vec_normalize(self.vectorized_envs)
+        vec_normalized.obs_rms = self.checkpoint.observations_rms
+        vec_normalized.ret_rms = self.checkpoint.rewards_rms
 
-            # adr
-            self.randomizer.randomized_parameters = (
-                self.restart_checkpoint.randomized_parameters
-            )
-            self.randomizer.buffer = self.restart_checkpoint.randomization_buffer
-            pass
+        # randomizer
+        self.randomizer.randomized_parameters = self.checkpoint.randomized_parameters
+        self.randomizer.buffer = self.checkpoint.randomization_buffer
+        pass
 
-        for j in range(current_iteration, self.config.policy_iterations):
+    def train(
+        self,
+        checkpoint_interval: int,
+        checkpoint_all: bool,
+        enable_wandb: bool,
+        is_dev: bool = True,
+    ) -> None:
+        """
+        Train an agent based on the configs specified by the training parameters.
+
+        Args:
+            checkpoint_interval (int): Number of iterations after which to checkpoint.
+            checkpoint_all (bool): Whether to archive all checkpoints.
+            enable_wandb (bool): Whether to log to Wandb, `True` by default.
+            is_dev (bool): Whether this is a dev run of th experiment.
+
+        Returns:
+            None
+        """
+        # enable wandb
+        if enable_wandb:
+            self.wandb_init(is_dev)
+
+        # save
+        self.save_config()
+
+        # seed
+        torch.manual_seed(self.config.random_seed)
+        torch.cuda.manual_seed_all(self.config.random_seed)
+        torch.set_num_threads(1)
+
+        for j in range(self.current_iteration, self.config.policy_iterations):
             # anneal
             if self.config.use_linear_lr_decay:
                 self.ppo.anneal_learning_rates(j, self.config.policy_iterations)
@@ -204,75 +134,50 @@ class AutoDRTrainer:
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
-                self.checkpoint(current_iteration)
+                checkpoint_name = str(timestamp()) if checkpoint_all else ""
+                self.save_checkpoint(checkpoint_name)
                 pass
 
             if enable_wandb:
                 wandb.log(wandb_logs)
 
+            self.current_iteration = j + 1
+            continue
+
+        # end
         if enable_wandb:
             wandb.finish()
+        pass
 
-    def checkpoint(self, current_iteration: int) -> None:
+    def save_checkpoint(self, checkpoint_name: str) -> None:
         """
         Save checkpoint.
 
-        Args:
-            current_iteration (int): Current training iteration.
+         Args:
+            checkpoint_name (str): Checkpoint name to be used while saving.
 
         Returns:
             None
         """
         vec_normalized = get_vec_normalize(self.vectorized_envs)
-        checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
 
         checkpoint = AutoDRCheckpoint(
-            wandb_run_id=wandb.run.id,
-            current_iteration=current_iteration,
-            actor_state_dict=self.actor_critic.actor.state_dict(),
-            critic_state_dict=self.actor_critic.critic.state_dict(),
-            optimizer_state_dict=self.ppo.optimizer.state_dict(),
-            observations_rms=(
+            wandb_run_id = (
+                wandb.run.id if (self.wandb_initialized and wandb and wandb.run) else None
+            ),
+            current_iteration = self.current_iteration,
+            actor_state_dict = self.actor_critic.actor.state_dict(),
+            critic_state_dict = self.actor_critic.critic.state_dict(),
+            optimizer_state_dict = self.ppo.optimizer.state_dict(),
+            observations_rms = (
                 vec_normalized.obs_rms if vec_normalized is not None else None
             ),
-            rewards_rms=(
+            rewards_rms = (
                 vec_normalized.ret_rms if vec_normalized is not None else None
             ),
-            randomized_parameters=self.randomizer.randomized_parameters,
-            randomization_buffer=self.randomizer.buffer,
+            randomized_parameters = self.randomizer.randomized_parameters,
+            randomization_buffer = self.randomizer.buffer,
         )
-        checkpoint.save(self.config.checkpoint_dir, checkpoint_name)
+
+        checkpoint.save(self.checkpoint_directory, checkpoint_name)
         pass
-
-    @property
-    def log_dir(self) -> str:
-        """
-        Returns the path for training logs.
-
-        Returns:
-            str
-        """
-        if not self._log_dir:
-            self._log_dir = os.path.expanduser(self.config.log_dir)
-
-        return self._log_dir
-
-    @property
-    def device(self) -> torch.device:
-        """
-        Torch device to use for training and optimization.
-
-        Returns:
-          torch.device
-        """
-        if isinstance(self._device, torch.device):
-            return self._device
-
-        use_cuda = self.config.use_cuda and torch.cuda.is_available()
-        if use_cuda and self.config.cuda_deterministic:
-            torch.backends.cudnn.benchmark = False
-            torch.backends.cudnn.deterministic = True
-
-        self._device = torch.device("cuda:0" if use_cuda else "cpu")
-
-        return self._device
