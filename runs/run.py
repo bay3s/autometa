@@ -2,6 +2,7 @@ import os
 
 import argparse
 
+from autometa.utils.path_utils import absolute_path
 from autometa.training.rl_squared.rl_squared_config import RLSquaredConfig
 from autometa.training.rl_squared.rl_squared_trainer import RLSquaredTrainer
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--env-name",
+        "--env",
         choices=SUPPORTED_ENVIRONMENTS,
         default=None,
         help=f"Training environment, one of [{', '.join(SUPPORTED_ENVIRONMENTS)}].",
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     # args
     args = parser.parse_args()
 
-    if args.env_name is None and not args.run_all:
+    if args.env is None and not args.run_all:
         raise ValueError(
             f"Unable to infer experiment environment from the inputs, either provide `--env-name` or "
             f"set `--run-all` to `True`"
@@ -106,11 +107,7 @@ if __name__ == "__main__":
         )
 
     # config
-    config_path = (
-        f"{os.path.dirname(__file__)}/configs/{args.algo}/{args.env_name}.json"
-    )
-
-    # config
+    config_path = absolute_path(f"runs/configs/{args.algo}_{args.env}.json")
     config_cls = RLSquaredConfig if args.algo == RL_SQUARED else AutoDRConfig
     training_config = config_cls.from_json(config_path)
 

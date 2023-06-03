@@ -10,4 +10,4 @@
 source /home/${USER}/.bashrc
 source activate rl
 
-srun python3 $HOME/autometa/runs/run.py --algo=rl_squared --env-name=cheetah_velocity --prod
+srun python3 $HOME/autometa/runs/run.py --algo=auto_dr --env=point_navigation --prod
