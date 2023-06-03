@@ -15,7 +15,7 @@ from autometa.randomization.randomization_parameter import RandomizationParamete
 
 
 @dataclass
-class TrainingCheckpoint:
+class BaseTrainingCheckpoint:
     """
     Base dataclass to keep track of experiment configs.
 
@@ -27,7 +27,8 @@ class TrainingCheckpoint:
         observation_rms (RunningMeanStd): `RunningMeanStd` for the environment observations.
         rewards_rms (RunningMeanStd): `RunningMeanStd` for the environment rewards.
         wandb_run_id (str): `wandb` run id.
-        randomizer (Randomizer): Randomizer for the environment parameters.
+        randomization_parameters (List[RandomizationParameter]): A list of randomized parameters.
+        randomization_buffer (RandomizationPerformanceBuffer): Performance buffer for Auto-DR.
     """
 
     # logs
@@ -49,7 +50,7 @@ class TrainingCheckpoint:
     pass
 
     @classmethod
-    def load(cls, absolute_path: str, device: torch.device) -> "TrainingCheckpoint":
+    def load(cls, absolute_path: str, device: torch.device) -> "BaseTrainingCheckpoint":
         """
         Load checkpoint from a given
 

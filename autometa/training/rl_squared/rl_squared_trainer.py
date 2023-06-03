@@ -1,57 +1,60 @@
-import os
-
 import torch
 import wandb
 
-import autometa.utils.logging_utils as logging_utils
+from autometa.training.base_trainer import BaseTrainer
 from autometa.training.rl_squared.rl_squared_config import RLSquaredConfig
-from autometa.learners.ppo import PPO
 
-from autometa.utils.env_utils import make_vec_envs, get_vec_normalize
-from autometa.training.training_checkpoint import TrainingCheckpoint
+from autometa.utils.env_utils import get_vec_normalize
+from autometa.training.base_training_checkpoint import BaseTrainingCheckpoint
+from autometa.training.rl_squared.rl_squared_checkpoint import RLSquaredCheckpoint
 from autometa.utils.training_utils import (
     sample_rl_squared,
     timestamp,
 )
 
 from autometa.sampling.meta_batch_sampler import MetaBatchSampler
-from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 
 
-class RLSquaredTrainer:
+class RLSquaredTrainer(BaseTrainer):
     def __init__(self, config: RLSquaredConfig = None, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 
         Args:
             config (RLSquaredConfig): Params to be used for the trainer.
-            checkpoint_path (str): Absolute `TrainingCheckpoint` path from which to restart.
+            checkpoint_path (str): Checkpoint path from which to restart.
         """
-        self.config = config
+        super().__init__(config, checkpoint_path)
+        pass
 
-        # misc
-        self._device = None
-        self._log_dir = None
+    def load_checkpoint(self, checkpoint_path: str) -> None:
+        """
+        Loads relevant info from checkpoint (eg. current iteration, actor-critic state, optimizer state, etc.)
 
-        # checkpoint
-        if checkpoint_path is not None:
-            self.restart_checkpoint = TrainingCheckpoint.load(
-                checkpoint_path, self.device
-            )
-        else:
-            self.restart_checkpoint = None
-            pass
+        Args:
+                checkpoint_path (str): Absolute path from which to load the checkpoint.
 
-        # general
-        self.ppo = None
-        self.vectorized_envs = None
-        self.actor_critic = None
+        Returns:
+                BaseTrainingCheckpoint
+        """
+        self.checkpoint = BaseTrainingCheckpoint.load(checkpoint_path, self.device)
+        self.current_iteration = self.checkpoint.current_iteration
+
+        # policy / ppo
+        self.actor_critic.actor.load_state_dict(self.checkpoint.actor_state_dict)
+        self.actor_critic.critic.load_state_dict(self.checkpoint.critic_state_dict)
+        self.ppo.optimizer.load_state_dict(self.checkpoint.optimizer_state_dict)
+
+        # rms
+        vec_normalized = get_vec_normalize(self.vectorized_envs)
+        vec_normalized.obs_rms = self.checkpoint.observations_rms
+        vec_normalized.ret_rms = self.checkpoint.rewards_rms
         pass
 
     def train(
         self,
-        checkpoint_interval: int = 1,
-        enable_wandb: bool = True,
+        checkpoint_interval: int,
+        enable_wandb: bool,
         is_dev: bool = True,
     ) -> None:
         """
@@ -65,93 +68,18 @@ class RLSquaredTrainer:
         Returns:
             None
         """
-        # log
+        # save
         self.config.save()
 
         if enable_wandb:
-            wandb.login()
-            project_suffix = "-dev" if is_dev else ""
-
-            if (
-                self.restart_checkpoint is None
-                or self.restart_checkpoint.wandb_run_id is None
-            ):
-                wandb.init(
-                    project=f"autometa{project_suffix}",
-                    config=self.config.dict,
-                )
-                self.config.wandb_run_id = wandb.run.id
-            else:
-                wandb.init(
-                    project=f"autometa{project_suffix}",
-                    id=self.restart_checkpoint.wandb_run_id,
-                )
-                self.config.wandb_run_id = wandb.run.id
-                pass
+            self.wandb_init(is_dev)
 
         # seed
         torch.manual_seed(self.config.random_seed)
         torch.cuda.manual_seed_all(self.config.random_seed)
-
-        # clean
-        logging_utils.cleanup_log_dir(self.log_dir)
         torch.set_num_threads(1)
 
-        self.vectorized_envs = make_vec_envs(
-            self.config.env_name,
-            self.config.env_configs,
-            self.config.random_seed,
-            self.config.num_processes,
-            self.device,
-            self.config.discount_gamma,
-            self.config.norm_observations,
-            self.config.norm_rewards,
-        )
-
-        self.actor_critic = StatefulActorCritic(
-            self.vectorized_envs.observation_space,
-            self.vectorized_envs.action_space,
-            recurrent_state_size=256,
-        ).to_device(self.device)
-
-        self.ppo = PPO(
-            actor_critic=self.actor_critic,
-            clip_param=self.config.ppo_clip_param,
-            opt_epochs=self.config.ppo_opt_epochs,
-            num_minibatches=self.config.ppo_num_minibatches,
-            value_loss_coef=self.config.ppo_value_loss_coef,
-            entropy_coef=self.config.ppo_entropy_coef,
-            actor_lr=self.config.actor_lr,
-            critic_lr=self.config.critic_lr,
-            eps=self.config.optimizer_eps,
-            max_grad_norm=self.config.max_grad_norm,
-        )
-
-        current_iteration = 0
-
-        # checkpoint
-        if self.restart_checkpoint:
-            # iteration
-            current_iteration = self.restart_checkpoint.current_iteration
-
-            # policy / ppo
-            self.actor_critic.actor.load_state_dict(
-                self.restart_checkpoint.actor_state_dict
-            )
-            self.actor_critic.critic.load_state_dict(
-                self.restart_checkpoint.critic_state_dict
-            )
-            self.ppo.optimizer.load_state_dict(
-                self.restart_checkpoint.optimizer_state_dict
-            )
-
-            # rms
-            vec_normalized = get_vec_normalize(self.vectorized_envs)
-            vec_normalized.obs_rms = self.restart_checkpoint.observations_rms
-            vec_normalized.ret_rms = self.restart_checkpoint.rewards_rms
-            pass
-
-        for j in range(current_iteration, self.config.policy_iterations):
+        for j in range(self.current_iteration, self.config.policy_iterations):
             # anneal
             if self.config.use_linear_lr_decay:
                 self.ppo.anneal_learning_rates(j, self.config.policy_iterations)
@@ -187,23 +115,23 @@ class RLSquaredTrainer:
             is_last_iteration = j == (self.config.policy_iterations - 1)
 
             if j % checkpoint_interval == 0 or is_last_iteration:
-                self.checkpoint(current_iteration)
+                self.checkpoint()
                 pass
 
             if enable_wandb:
                 wandb.log(wandb_logs)
+
+            self.current_iteration = j + 1
+            continue
 
         # end
         if enable_wandb:
             wandb.finish()
         pass
 
-    def checkpoint(self, current_iteration: int) -> None:
+    def save_checkpoint(self) -> None:
         """
         Save checkpoint.
-
-        Args:
-            current_iteration (int): Current training iteration.
 
         Returns:
             None
@@ -211,8 +139,8 @@ class RLSquaredTrainer:
         vec_normalized = get_vec_normalize(self.vectorized_envs)
         checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
 
-        checkpoint = TrainingCheckpoint(
-            current_iteration=current_iteration,
+        checkpoint = RLSquaredCheckpoint(
+            current_iteration=self.current_iteration,
             actor_state_dict=self.actor_critic.actor.state_dict(),
             critic_state_dict=self.actor_critic.critic.state_dict(),
             optimizer_state_dict=self.ppo.optimizer.state_dict(),
@@ -226,36 +154,3 @@ class RLSquaredTrainer:
         )
         checkpoint.save(self.config.checkpoint_dir, checkpoint_name)
         pass
-
-    @property
-    def log_dir(self) -> str:
-        """
-        Returns the path for training logs.
-
-        Returns:
-            str
-        """
-        if not self._log_dir:
-            self._log_dir = os.path.expanduser(self.config.log_dir)
-
-        return self._log_dir
-
-    @property
-    def device(self) -> torch.device:
-        """
-        Torch device to use for training and optimization.
-
-        Returns:
-          torch.device
-        """
-        if isinstance(self._device, torch.device):
-            return self._device
-
-        use_cuda = self.config.use_cuda and torch.cuda.is_available()
-        if use_cuda and self.config.cuda_deterministic:
-            torch.backends.cudnn.benchmark = False
-            torch.backends.cudnn.deterministic = True
-
-        self._device = torch.device("cuda:0" if use_cuda else "cpu")
-
-        return self._device

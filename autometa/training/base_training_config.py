@@ -7,7 +7,7 @@ from autometa.utils.path_utils import absolute_path as absolute_path_
 
 
 @dataclass
-class TrainingConfig:
+class BaseTrainingConfig:
     """
     Base dataclass to keep track of experiment configs.
 
@@ -107,19 +107,6 @@ class TrainingConfig:
         """
         return self._wandb_run_id
 
-    @wandb_run_id.setter
-    def wandb_run_id(self, value: str) -> str:
-        """
-        Returns a timestamp for the experiment config
-
-        Args:
-            value (str): `wandb` run id.
-
-        Returns:
-            str
-        """
-        self._wandb_run_id = value
-
     @property
     def directory(self) -> str:
         """
@@ -163,15 +150,15 @@ class TrainingConfig:
         return f"{self.directory}/checkpoints/"
 
     @classmethod
-    def from_json(cls, json_file_path: str) -> "TrainingConfig":
+    def from_json(cls, json_file_path: str) -> "BaseTrainingConfig":
         """
-        Takes the json file path as parameter and returns the populated `TrainingConfig`.
+        Takes the json file path as parameter and returns the populated `BaseTrainingConfig`.
 
         Args:
             json_file_path (str): JSON file path from which to load the configs.
 
         Returns:
-            TrainingConfig
+            BaseTrainingConfig
         """
         keys = [f.name for f in fields(cls)]
         file = json.load(open(json_file_path))
@@ -189,7 +176,7 @@ class TrainingConfig:
         return json.dumps(self.__dict__, indent=2)
 
     @classmethod
-    def from_dict(cls, state_dict: str) -> "TrainingConfig":
+    def from_dict(cls, state_dict: str) -> "BaseTrainingConfig":
         """
         Takes the state `dict` as parameter and returns the populated TrainingConfigs.
 
@@ -197,14 +184,13 @@ class TrainingConfig:
             state_dict (str): State dict from which to load the configs.
 
         Returns:
-            TrainingConfig
+            BaseTrainingConfig
         """
         keys = [f.name for f in fields(cls)]
 
         return cls(**{key: state_dict[key] for key in keys if key in state_dict})
 
-    @property
-    def dict(self) -> dict:
+    def to_dict(self) -> dict:
         """
         Return dictionary with dataclass fields.
 

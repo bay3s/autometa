@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from autometa.training.training_config import TrainingConfig
+from autometa.training.base_training_config import BaseTrainingConfig
 
 
 @dataclass
-class RLSquaredConfig(TrainingConfig):
+class RLSquaredConfig(BaseTrainingConfig):
     """
     Dataclass to keep track of experiment configs.
 

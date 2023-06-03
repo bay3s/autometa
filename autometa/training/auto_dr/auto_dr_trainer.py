@@ -3,7 +3,6 @@ import os
 import torch
 import wandb
 
-import autometa.utils.logging_utils as logging_utils
 from autometa.training.auto_dr.auto_dr_config import AutoDRConfig
 from autometa.learners.ppo import PPO
 
@@ -13,7 +12,7 @@ from autometa.utils.training_utils import (
     timestamp,
 )
 
-from autometa.training.training_checkpoint import TrainingCheckpoint
+from autometa.training.auto_dr.auto_dr_checkpoint import AutoDRCheckpoint
 from autometa.sampling.meta_batch_sampler import MetaBatchSampler
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 from autometa.randomization.randomizer import Randomizer
@@ -26,7 +25,7 @@ class AutoDRTrainer:
 
         Args:
             config (AutoDRConfig): Params to be used for the trainer.
-            checkpoint_path (str): TrainingCheckpoint path from where to restart the experiment.
+            checkpoint_path (str): Checkpoint path from where to restart the experiment.
         """
         self.config = config
 
@@ -36,7 +35,7 @@ class AutoDRTrainer:
 
         # checkpoint
         if checkpoint_path is not None:
-            self.restart_checkpoint = TrainingCheckpoint.load(
+            self.restart_checkpoint = AutoDRCheckpoint.load(
                 checkpoint_path, self.device
             )
         else:
@@ -96,9 +95,6 @@ class AutoDRTrainer:
         # seed
         torch.manual_seed(self.config.random_seed)
         torch.cuda.manual_seed_all(self.config.random_seed)
-
-        # clean
-        logging_utils.cleanup_log_dir(self.log_dir)
         torch.set_num_threads(1)
 
         self.vectorized_envs = make_vec_envs(
@@ -230,7 +226,7 @@ class AutoDRTrainer:
         vec_normalized = get_vec_normalize(self.vectorized_envs)
         checkpoint_name = str(timestamp()) if self.config.checkpoint_all else ""
 
-        checkpoint = TrainingCheckpoint(
+        checkpoint = AutoDRCheckpoint(
             wandb_run_id=wandb.run.id,
             current_iteration=current_iteration,
             actor_state_dict=self.actor_critic.actor.state_dict(),
