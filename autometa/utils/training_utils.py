@@ -67,8 +67,7 @@ def sample_auto_dr(
                 value_preds,
                 actions,
                 action_log_probs,
-                recurrent_states_actor,
-                recurrent_states_critic,
+                recurrent_states,
             ) = actor_critic.act(
                 meta_episodes.obs[step].to(device),
                 meta_episodes.recurrent_states[step].to(device),
@@ -88,8 +87,7 @@ def sample_auto_dr(
             # insert
             meta_episodes.insert(
                 obs,
-                recurrent_states_actor,
-                recurrent_states_critic,
+                recurrent_states,
                 actions,
                 action_log_probs,
                 value_preds,

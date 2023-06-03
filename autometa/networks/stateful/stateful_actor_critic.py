@@ -68,11 +68,11 @@ class StatefulActorCritic(nn.Module, BaseActorCritic):
             observations, recurrent_states, recurrent_state_masks, self._device
         )
 
-        hidden_critic = self.critic(x)
-        hidden_actor = self.actor(x)
-        value_estimates = self.critic_linear(hidden_critic)
+        actor_features = self.actor(x)
+        crtic_features = self.critic(x)
+        value_estimates = self.critic_linear(crtic_features)
 
-        return value_estimates, hidden_actor, recurrent_states
+        return value_estimates, actor_features, recurrent_states
 
     def act(
         self,
