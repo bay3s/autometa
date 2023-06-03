@@ -57,20 +57,9 @@ class PPO:
         self.initial_critic_lr = critic_lr
 
         self.optimizer = torch.optim.Adam(
-            [
-                {
-                    "name": self.OPT_ACTOR_PARAMS,
-                    "params": self.actor_critic.actor.parameters(),
-                    "lr": self.initial_actor_lr,
-                    "eps": eps,
-                },
-                {
-                    "name": self.OPT_CRITIC_PARAMS,
-                    "params": self.actor_critic.critic.parameters(),
-                    "lr": self.initial_critic_lr,
-                    "eps": eps,
-                },
-            ]
+            params = self.actor_critic.parameters(),
+            lr = self.initial_actor_lr,
+            eps = eps,
         )
 
         pass
@@ -154,6 +143,7 @@ class PPO:
                     value_pred_clipped = value_preds_batch + (
                         values - value_preds_batch
                     ).clamp(-self.clip_param, self.clip_param)
+
                     value_loss_mse = (values - return_batch).pow(2)
                     value_loss_clipped = (value_pred_clipped - return_batch).pow(2)
                     value_loss = (
@@ -174,6 +164,7 @@ class PPO:
                 nn.utils.clip_grad_norm_(
                     self.actor_critic.actor.parameters(), self.max_grad_norm
                 )
+
                 nn.utils.clip_grad_norm_(
                     self.actor_critic.critic.parameters(), self.max_grad_norm
                 )

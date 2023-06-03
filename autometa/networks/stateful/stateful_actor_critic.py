@@ -69,8 +69,8 @@ class StatefulActorCritic(nn.Module, BaseActorCritic):
         )
 
         actor_features = self.actor(x)
-        crtic_features = self.critic(x)
-        value_estimates = self.critic_linear(crtic_features)
+        critic_features = self.critic(x)
+        value_estimates = self.critic_linear(critic_features)
 
         return value_estimates, actor_features, recurrent_states
 
@@ -171,15 +171,6 @@ class StatefulActorCritic(nn.Module, BaseActorCritic):
         """
         return self._recurrent_state_size
 
-    def forward(self) -> None:
-        """
-        Forward pass for the network, in this case not implemented.
-
-        Returns:
-          None
-        """
-        raise NotImplementedError
-
     def _init_dist(
         self, last_hidden_size: int, action_space: gym.Space
     ) -> Union[Categorical, DiagonalGaussian]:
@@ -210,3 +201,12 @@ class StatefulActorCritic(nn.Module, BaseActorCritic):
         self._device = device
 
         return self.to(device)
+
+    def forward(self) -> None:
+        """
+        Forward pass for the network, in this case not implemented.
+
+        Returns:
+          None
+        """
+        raise NotImplementedError
