@@ -126,9 +126,6 @@ class RLSquaredTrainer(BaseTrainer):
                 wandb.log(wandb_logs)
 
             self.current_iteration = j + 1
-
-            # @todo remove once testing is done.
-            self.load_checkpoint(f"{self.checkpoint_directory}{checkpoint_name}.pt")
             continue
 
         # end
