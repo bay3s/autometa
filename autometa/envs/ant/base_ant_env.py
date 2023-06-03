@@ -28,22 +28,6 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
         self._action_scaling = None
         pass
 
-    @property
-    def action_scaling(self):
-        """
-
-        Returns:
-
-        """
-        if (not hasattr(self, "action_space")) or (self.action_space is None):
-            return 1.0
-
-        if self._action_scaling is None:
-            lb, ub = self.action_space.low, self.action_space.high
-            self._action_scaling = 0.5 * (ub - lb)
-
-        return self._action_scaling
-
     def _get_obs(self) -> np.ndarray:
         """
         Get observation.

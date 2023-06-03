@@ -194,12 +194,10 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
         self.do_simulation(action, self.frame_skip)
         new_position = self.get_body_com("torso")[:2]
 
-        goal_reward = -np.sum(np.abs(new_position - self._target_state)) + 4.0
-        survive_reward = 0.05
-        ctrl_cost = 0.5 * 1e-2 * np.sum(np.square(action / self.action_scaling))
-        contact_cost = (
-            0.5 * 1e-3 * np.sum(np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)))
-        )
+        goal_reward = -1.0 * np.abs(new_position - self._target_state).sum()
+        ctrl_cost = 0.1 * np.square(action).sum()
+        contact_cost = 0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
+        survive_reward = 0.0
 
         reward = goal_reward - ctrl_cost - contact_cost + survive_reward
         self._episode_reward += reward

@@ -133,7 +133,7 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
 
         forward_vel = (position_after - position_before) / self.dt
         forward_reward = -1.0 * abs(forward_vel - self._target_velocity.item())
-        ctrl_cost = 0.5 * 1e-1 * np.sum(np.square(action))
+        ctrl_cost = 0.5 * 1e-1 * np.square(action).sum()
 
         observation = self._get_obs()
         reward = forward_reward - ctrl_cost
