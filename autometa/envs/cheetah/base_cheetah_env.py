@@ -121,14 +121,3 @@ class BaseCheetahEnv(HalfCheetahEnv_, BaseRandomizedMujocoEnv, ABC):
             self._get_viewer(mode).render()
         else:
             raise NotImplementedError(f"`render` not implemented for `{mode}` mode.")
-
-    def viewer_setup(self):
-        camera_id = self.model.camera_name2id("track")
-
-        self.viewer.cam.type = 2
-        self.viewer.cam.fixedcamid = camera_id
-        self.viewer.cam.distance = self.model.stat.extent * 0.35
-
-        # hide overlay
-        self.viewer._hide_overlay = True
-        pass

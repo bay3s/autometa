@@ -126,13 +126,30 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
         else:
             raise NotImplementedError(f"`render` not implemented for `{mode}` mode.")
 
-    def viewer_setup(self):
-        camera_id = self.model.camera_name2id("track")
+    def viewer_setup(self) -> None:
+        """
+        Set up the viewer for rendering the environment.
 
+        Returns:
+            None
+        """
+        camera_id = self.model.camera_name2id("track")
         self.viewer.cam.type = 2
         self.viewer.cam.fixedcamid = camera_id
         self.viewer.cam.distance = self.model.stat.extent * 0.35
-
-        # hide overlay
         self.viewer._hide_overlay = True
-        pass
+
+    def render(self, mode: str = "human"):
+        """
+        Render the enevironment.
+
+        Args:
+            mode (str): Mode in which to render the environment.
+
+        Returns:
+            None
+        """
+        if mode == "human":
+            self._get_viewer(mode).render()
+        else:
+            raise NotImplementedError(f"`render` not implemented for `{mode}` mode.")

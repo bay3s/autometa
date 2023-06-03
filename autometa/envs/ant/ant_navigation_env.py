@@ -290,17 +290,6 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
         """
         return self._episode_length
 
-    def render(self, mode: str = "human") -> None:
-        """
-        Render the environment given the render mode.
-
-        Args:
-          mode (str): Mode in which to render the environment.
-
-        Returns:
-          None
-        """
-        pass
 
     def close(self) -> None:
         """
