@@ -2,28 +2,38 @@ import torch
 import wandb
 
 from autometa.training.base_trainer import BaseTrainer
-from autometa.training.rl_squared.rl_squared_config import RLSquaredConfig
+from autometa.training.auto_dr.auto_dr_config import AutoDRConfig
 
 from autometa.utils.env_utils import get_vec_normalize
-from autometa.training.rl_squared.rl_squared_checkpoint import RLSquaredCheckpoint
+from autometa.training.auto_dr.auto_dr_checkpoint import AutoDRCheckpoint
 from autometa.utils.training_utils import (
-    sample_rl_squared,
+    sample_auto_dr,
     timestamp,
 )
 
 from autometa.sampling.meta_batch_sampler import MetaBatchSampler
+from autometa.randomization.randomizer import Randomizer
 
 
-class RLSquaredTrainer(BaseTrainer):
-    def __init__(self, config: RLSquaredConfig, checkpoint_path: str = None):
+class AutoDRTrainer(BaseTrainer):
+    def __init__(self, config: AutoDRConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
 
         Args:
-            config (RLSquaredConfig): Params to be used for the trainer.
+            config (AutoDRConfig): Params to be used for the trainer.
             checkpoint_path (str): Checkpoint path from which to restart.
         """
         super().__init__(config, checkpoint_path)
+
+        self.randomizer = Randomizer(
+            parallel_envs=self.vectorized_envs,
+            evaluation_probability=self.config.adr_evaluation_probability,
+            buffer_size=self.config.adr_performance_buffer_size,
+            performance_threshold_lower=self.config.adr_performance_threshold_lower,
+            performance_threshold_upper=self.config.adr_performance_threshold_upper,
+            delta=self.config.adr_delta,
+        )
         pass
 
     def load_checkpoint(self, checkpoint_path: str) -> None:
@@ -36,7 +46,7 @@ class RLSquaredTrainer(BaseTrainer):
         Returns:
             None
         """
-        self.checkpoint = RLSquaredCheckpoint.load(checkpoint_path, self.device)
+        self.checkpoint = AutoDRCheckpoint.load(checkpoint_path, self.device)
         self.current_iteration = self.checkpoint.current_iteration
 
         # policy / ppo
@@ -48,6 +58,10 @@ class RLSquaredTrainer(BaseTrainer):
         vec_normalized = get_vec_normalize(self.vectorized_envs)
         vec_normalized.obs_rms = self.checkpoint.observations_rms
         vec_normalized.ret_rms = self.checkpoint.rewards_rms
+
+        # randomizer
+        self.randomizer.randomized_parameters = self.checkpoint.randomized_parameters
+        self.randomizer.buffer = self.checkpoint.randomization_buffer
         pass
 
     def train(
@@ -88,9 +102,9 @@ class RLSquaredTrainer(BaseTrainer):
                 pass
 
             # sample
-            meta_episode_batches, meta_train_reward_per_step = sample_rl_squared(
+            meta_episode_batches, meta_train_reward_per_step = sample_auto_dr(
+                self.randomizer,
                 self.actor_critic,
-                self.vectorized_envs,
                 self.config.meta_episode_length,
                 self.config.meta_episodes_per_epoch,
                 self.config.use_gae,
@@ -112,6 +126,9 @@ class RLSquaredTrainer(BaseTrainer):
                 "meta_train/mean_meta_episode_reward": meta_train_reward_per_step
                 * self.config.meta_episode_length,
             }
+
+            # add
+            wandb_logs.update(self.randomizer.info)
 
             # checkpoint
             is_last_iteration = j == (self.config.policy_iterations - 1)
@@ -144,20 +161,22 @@ class RLSquaredTrainer(BaseTrainer):
         """
         vec_normalized = get_vec_normalize(self.vectorized_envs)
 
-        checkpoint = RLSquaredCheckpoint(
+        checkpoint = AutoDRCheckpoint(
             wandb_run_id = (
                 wandb.run.id if (self.wandb_initialized and wandb and wandb.run) else None
             ),
-            current_iteration=self.current_iteration,
-            actor_state_dict=self.actor_critic.actor.state_dict(),
-            critic_state_dict=self.actor_critic.critic.state_dict(),
-            optimizer_state_dict=self.ppo.optimizer.state_dict(),
-            observations_rms=(
+            current_iteration = self.current_iteration,
+            actor_state_dict = self.actor_critic.actor.state_dict(),
+            critic_state_dict = self.actor_critic.critic.state_dict(),
+            optimizer_state_dict = self.ppo.optimizer.state_dict(),
+            observations_rms = (
                 vec_normalized.obs_rms if vec_normalized is not None else None
             ),
-            rewards_rms=(
+            rewards_rms = (
                 vec_normalized.ret_rms if vec_normalized is not None else None
             ),
+            randomized_parameters = self.randomizer.randomized_parameters,
+            randomization_buffer = self.randomizer.buffer,
         )
 
         checkpoint.save(self.checkpoint_directory, checkpoint_name)
