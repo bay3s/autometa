@@ -224,9 +224,9 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         Returns:
             None
         """
-        self.sim.model.body_mass[self.THIGH_MASS_IDX] = task["thigh_mass"]
-        self.sim.model.body_mass[self.LEG_MASS_IDX] = task["leg_mass"]
-        self.sim.model.body_mass[self.FOOT_MASS_IDX] = task["foot_mass"]
+        self.model.body_mass[self.THIGH_MASS_IDX] = task["thigh_mass"]
+        self.model.body_mass[self.LEG_MASS_IDX] = task["leg_mass"]
+        self.model.body_mass[self.FOOT_MASS_IDX] = task["foot_mass"]
         pass
 
     def reset(
