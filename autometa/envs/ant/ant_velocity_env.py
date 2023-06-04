@@ -168,12 +168,12 @@ class AntVelocityEnv(BaseAntEnv, EzPickle):
         """
         self._elapsed_steps += 1
 
-        xposbefore = self.get_body_com("torso")[0]
+        position_before = self.get_body_com("torso")[0]
         self.do_simulation(action, self.frame_skip)
-        xposafter = self.get_body_com("torso")[0]
+        position_after = self.get_body_com("torso")[0]
 
-        forward_vel = (xposafter - xposbefore) / self.dt
-        forward_reward = -1.0 * np.abs(forward_vel - self._target_velocity) + 1.0
+        forward_velocity = (position_after - position_before) / self.dt
+        forward_reward = -1.0 * np.abs(forward_velocity - self._target_velocity.item()) + 1.0
         survive_reward = 0.05
 
         ctrl_cost = 0.5 * 1e-2 * np.square(action).sum()

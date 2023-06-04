@@ -17,14 +17,14 @@ POINT_NAVIGATION = "point_navigation"
 
 CHEETAH_VELOCITY = "cheetah_velocity"
 
-ANT_SIMPLE = "ant_simple"
 ANT_NAVIGATION = "ant_navigation"
+ANT_VELOCITY = "ant_velocity"
 
 SUPPORTED_ENVIRONMENTS = [
     POINT_NAVIGATION,
     CHEETAH_VELOCITY,
-    ANT_SIMPLE,
     ANT_NAVIGATION,
+    ANT_VELOCITY,
 ]
 
 RL_SQUARED = "rl_squared"
