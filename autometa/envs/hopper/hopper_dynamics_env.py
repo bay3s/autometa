@@ -107,6 +107,15 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         BaseHopperEnv.__init__(self)
         EzPickle.__init__(self)
 
+        # @todo remove
+        self.log_scale_limit = 3.0
+        self.init_params = dict()
+        self.init_params['body_mass'] = self.model.body_mass
+        self.init_params['body_inertia'] = self.model.body_inertia
+        self.init_params['dof_damping'] = self.model.dof_damping
+        self.init_params['geom_friction'] = self.model.geom_friction
+        self.cur_params = self.init_params
+
         # sample
         self.seed(seed)
         self.sample_task()
@@ -192,29 +201,45 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         Returns:
             None
         """
-        if task is None:
-            task = dict()
+        new_params = {}
 
-            thigh_mass = self.randomized_parameter("thigh_mass")
-            task["thigh_mass"] = self.np_random.uniform(
-                thigh_mass.lower_bound.min_value,
-                thigh_mass.upper_bound.max_value,
-            )
+        body_mass_multipliers = np.array(1.5) ** np.random.uniform(
+            -self.log_scale_limit, self.log_scale_limit, size=self.model.body_mass.shape
+        )
 
-            leg_mass = self.randomized_parameter("leg_mass")
-            task["leg_mass"] = self.np_random.uniform(
-                leg_mass.lower_bound.min_value,
-                leg_mass.upper_bound.max_value,
-            )
+        new_params["body_mass"] = self.init_params["body_mass"] * body_mass_multipliers
 
-            foot_mass = self.randomized_parameter("foot_mass")
-            task["foot_mass"] = self.np_random.uniform(
-                foot_mass.lower_bound.min_value,
-                foot_mass.upper_bound.max_value,
-            )
-            pass
+        # body_inertia
+        body_inertia_multiplyers = np.array(1.5) ** np.random.uniform(
+            -self.log_scale_limit,
+            self.log_scale_limit,
+            size=self.model.body_inertia.shape,
+        )
+        new_params["body_inertia"] = (
+            body_inertia_multiplyers * self.init_params["body_inertia"]
+        )
 
-        self.set_task(task)
+        dof_damping_multipliers = np.array(1.3) ** np.random.uniform(
+            -self.log_scale_limit,
+            self.log_scale_limit,
+            size=self.model.dof_damping.shape,
+        )
+
+        new_params["dof_damping"] = np.multiply(
+            self.init_params["dof_damping"], dof_damping_multipliers
+        )
+
+        # friction at the body components
+        dof_damping_multipliers = np.array(1.5) ** np.random.uniform(
+            -self.log_scale_limit,
+            self.log_scale_limit,
+            size=self.model.geom_friction.shape,
+        )
+        new_params["geom_friction"] = np.multiply(
+            self.init_params["geom_friction"], dof_damping_multipliers
+        )
+
+        self.set_task(new_params)
         pass
 
     def set_task(self, task: dict) -> None:
@@ -224,9 +249,10 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         Returns:
             None
         """
-        self.model.body_mass[self.THIGH_MASS_IDX] = task["thigh_mass"]
-        self.model.body_mass[self.LEG_MASS_IDX] = task["leg_mass"]
-        self.model.body_mass[self.FOOT_MASS_IDX] = task["foot_mass"]
+        self.model.body_mass[:] = task["body_mass"][:]
+        self.model.body_inertia[:] = task["body_inertia"][:]
+        self.model.dof_damping[:] = task["dof_damping"][:]
+        self.model.geom_friction[:] = task["geom_friction"][:]
         pass
 
     def reset(
