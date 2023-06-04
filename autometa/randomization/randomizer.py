@@ -239,6 +239,7 @@ class Randomizer:
             if not done:
                 continue
 
+            # @todo re-evaluate all boundaries at the end of a meta-episode.
             if boundary is not None:
                 self.update_buffer(boundary, info["episode"]["r"])
                 self.re_evaluate(boundary)
