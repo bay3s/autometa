@@ -6,44 +6,10 @@ from gym.utils import EzPickle, seeding
 
 from autometa.envs.ant.base_ant_env import BaseAntEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
-from autometa.randomization.randomization_bound_type import RandomizationBoundType
-from autometa.randomization.randomization_bound import RandomizationBound
 
 
-class AntNavigationEnv(BaseAntEnv, EzPickle):
+class AntSimpleEnv(BaseAntEnv, EzPickle):
     RANDOMIZABLE_PARAMETERS = [
-        RandomizationParameter(
-            name="x_position",
-            lower_bound=RandomizationBound(
-                type=RandomizationBoundType.LOWER_BOUND,
-                value=0.0,
-                min_value=-3.0,
-                max_value=0.0,
-            ),
-            upper_bound=RandomizationBound(
-                type=RandomizationBoundType.UPPER_BOUND,
-                value=0.0,
-                min_value=0.0,
-                max_value=3.0,
-            ),
-            delta=0.05,
-        ),
-        RandomizationParameter(
-            name="y_position",
-            lower_bound=RandomizationBound(
-                type=RandomizationBoundType.LOWER_BOUND,
-                value=0.0,
-                min_value=-3.0,
-                max_value=0.0,
-            ),
-            upper_bound=RandomizationBound(
-                type=RandomizationBoundType.UPPER_BOUND,
-                value=0.0,
-                min_value=0.0,
-                max_value=3.0,
-            ),
-            delta=0.05,
-        ),
     ]
 
     def __init__(
@@ -87,7 +53,6 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
 
         # sample
         self.seed(seed)
-        self.sample_task()
         pass
 
     @staticmethod
@@ -135,27 +100,6 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
         Returns:
             None
         """
-        if task is None:
-            task = dict()
-
-            x_param = self.randomized_parameter("x_position")
-            task["x_position"] = self.np_random.uniform(
-                x_param.lower_bound.min_value, x_param.upper_bound.max_value
-            )
-
-            y_param = self.randomized_parameter("y_position")
-            task["y_position"] = self.np_random.uniform(
-                y_param.lower_bound.min_value, y_param.upper_bound.max_value
-            )
-            pass
-
-        self._target_state = np.concatenate(
-            [
-                [task["x_position"]],
-                [task["y_position"]],
-            ],
-            dtype=np.float32,
-        )
         pass
 
     def reset(
@@ -181,7 +125,8 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
 
     def step(self, action: np.ndarray) -> Tuple:
         """
-        Take a step in the environment and return the corresponding observation, action, reward, plus additional info.
+        Take a step in the environment and return the corresponding observation, action, reward,
+        additional info, etc.
 
         Args:
             action (np.ndarray): Action to be taken in the environment.
@@ -190,23 +135,10 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
             Tuple
         """
         self._elapsed_steps += 1
-
-        self.do_simulation(action, self.frame_skip)
-        new_position = self.get_body_com("torso")[:2]
-
-        goal_reward = -1.0 * np.abs(new_position - self._target_state).sum()
-        ctrl_cost = 0.1 * np.square(action).sum()
-        contact_cost = 0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
-        survive_reward = 0.0
-
-        reward = goal_reward - ctrl_cost - contact_cost + survive_reward
+        observation, reward, terminated, truncated, info = super().step(action)
         self._episode_reward += reward
 
-        observation = self._get_obs()
-
-        state = self.state_vector()
-        not_terminated = np.isfinite(state).all() and 0.2 <= state[2] <= 1.0
-        terminated = not not_terminated
+        terminated = False
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 

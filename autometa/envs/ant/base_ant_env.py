@@ -22,7 +22,7 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
 
         # overwrite
         self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(125,), dtype=np.float32
+            low=-np.inf, high=np.inf, shape=(113,), dtype=np.float32
         )
 
         self._action_scaling = None
@@ -35,19 +35,11 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             np.ndarray
         """
-        return (
-            np.concatenate(
-                [
-                    self.sim.data.qpos.flat,
-                    self.sim.data.qvel.flat,
-                    np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
-                    self.sim.data.get_body_xmat("torso").flat,
-                    self.get_body_com("torso").flat,
-                ]
-            )
-            .astype(np.float32)
-            .flatten()
-        )
+        return np.concatenate([
+            self.sim.data.qpos.flat,
+            self.sim.data.qvel.flat,
+            np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
+        ]).astype(np.float32).flatten()
 
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """

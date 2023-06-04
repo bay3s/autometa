@@ -152,3 +152,9 @@ def register_custom_envs() -> None:
         id="AntNavigation-v1",
         entry_point="autometa.envs.ant.ant_navigation_env:AntNavigationEnv",
     )
+
+    # @todo delete after tuning.
+    register(
+        id="AntSimple-v1",
+        entry_point="autometa.envs.ant.ant_simple_env:AntSimpleEnv",
+    )

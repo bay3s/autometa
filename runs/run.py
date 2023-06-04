@@ -16,14 +16,14 @@ register_custom_envs()
 POINT_NAVIGATION = "point_navigation"
 
 CHEETAH_VELOCITY = "cheetah_velocity"
-CHEETAH_SIMPLE = "cheetah_simple"
 
+ANT_SIMPLE = "ant_simple"
 ANT_NAVIGATION = "ant_navigation"
 
 SUPPORTED_ENVIRONMENTS = [
     POINT_NAVIGATION,
     CHEETAH_VELOCITY,
-    CHEETAH_SIMPLE,
+    ANT_SIMPLE,
     ANT_NAVIGATION,
 ]
 
