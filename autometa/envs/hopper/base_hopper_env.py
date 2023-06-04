@@ -3,13 +3,12 @@ from typing import Tuple, Any
 from abc import ABC
 
 import gym
-from gym.spaces import Box
-from gym.envs.mujoco import AntEnv as AntEnv_
+from gym.envs.mujoco import HopperEnv as HopperEnv_
 
 from autometa.envs.base_randomized_mujoco_env import BaseRandomizedMujocoEnv
 
 
-class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
+class BaseHopperEnv(HopperEnv_, BaseRandomizedMujocoEnv, ABC):
     def __init__(self, seed: int = None):
         """
         Initialize the Mujoco Ant environment for meta-learning.
@@ -18,14 +17,7 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
             seed (int): Random seed.
         """
         BaseRandomizedMujocoEnv.__init__(self, seed)
-        AntEnv_.__init__(self)
-
-        # overwrite
-        self.observation_space = Box(
-            low=-np.inf, high=np.inf, shape=(113,), dtype=np.float32
-        )
-
-        self._action_scaling = None
+        HopperEnv_.__init__(self)
         pass
 
     def _get_obs(self) -> np.ndarray:
@@ -35,17 +27,7 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             np.ndarray
         """
-        return (
-            np.concatenate(
-                [
-                    self.sim.data.qpos.flat,
-                    self.sim.data.qvel.flat,
-                    np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
-                ]
-            )
-            .astype(np.float32)
-            .flatten()
-        )
+        return super()._get_obs().flatten()
 
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """
@@ -103,39 +85,10 @@ class BaseAntEnv(AntEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             None
         """
-        camera_id = self.model.camera_name2id("track")
-        self.viewer.cam.type = 2
-        self.viewer.cam.fixedcamid = camera_id
-        self.viewer.cam.distance = self.model.stat.extent * 0.35
-        self.viewer._hide_overlay = True
-
-    def render(self, mode: str = "human"):
-        """
-        Render the enevironment.
-
-        Args:
-            mode (str): Mode in which to render the environment.
-
-        Returns:
-            None
-        """
-        if mode == "human":
-            self._get_viewer(mode).render()
-        else:
-            raise NotImplementedError(f"`render` not implemented for `{mode}` mode.")
-
-    def viewer_setup(self) -> None:
-        """
-        Set up the viewer for rendering the environment.
-
-        Returns:
-            None
-        """
-        camera_id = self.model.camera_name2id("track")
-        self.viewer.cam.type = 2
-        self.viewer.cam.fixedcamid = camera_id
-        self.viewer.cam.distance = self.model.stat.extent * 0.35
-        self.viewer._hide_overlay = True
+        self.viewer.cam.trackbodyid = 2
+        self.viewer.cam.distance = self.model.stat.extent * 0.75
+        self.viewer.cam.lookat[2] += 0.8
+        self.viewer.cam.elevation = -20
 
     def render(self, mode: str = "human"):
         """

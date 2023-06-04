@@ -9,8 +9,7 @@ from autometa.randomization.randomization_parameter import RandomizationParamete
 
 
 class AntSimpleEnv(BaseAntEnv, EzPickle):
-    RANDOMIZABLE_PARAMETERS = [
-    ]
+    RANDOMIZABLE_PARAMETERS = []
 
     def __init__(
         self,

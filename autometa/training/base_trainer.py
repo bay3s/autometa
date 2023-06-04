@@ -83,10 +83,14 @@ class BaseTrainer(ABC):
                 folder = folder.replace(ch, ch.lower())
 
         run_id = (
-            wandb.run.id if (self.wandb_initialized and wandb and wandb.run) else self.timestamp
+            wandb.run.id
+            if (self.wandb_initialized and wandb and wandb.run)
+            else self.timestamp
         )
 
-        self._directory = absolute_path(f"results/{self.config.algo}/{folder}/run-{run_id}/")
+        self._directory = absolute_path(
+            f"results/{self.config.algo}/{folder}/run-{run_id}/"
+        )
 
         return self._directory
 

@@ -122,4 +122,3 @@ class BaseTrainingConfig:
             dict
         """
         return {k: str(v) for k, v in asdict(self).items()}
-

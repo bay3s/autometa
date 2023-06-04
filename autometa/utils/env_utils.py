@@ -157,4 +157,9 @@ def register_custom_envs() -> None:
         id="AntVelocity-v1",
         entry_point="autometa.envs.ant.ant_velocity_env:AntVelocityEnv",
     )
+
+    register(
+        id="HopperDynamics-v1",
+        entry_point="autometa.envs.hopper.hopper_dynamics_env:HopperDynamicsEnv",
+    )
     pass

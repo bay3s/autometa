@@ -1,5 +1,3 @@
-import os
-
 import argparse
 
 from autometa.utils.path_utils import absolute_path
@@ -13,18 +11,18 @@ from autometa.utils.env_utils import register_custom_envs
 register_custom_envs()
 
 
-POINT_NAVIGATION = "point_navigation"
-
-CHEETAH_VELOCITY = "cheetah_velocity"
-
 ANT_NAVIGATION = "ant_navigation"
 ANT_VELOCITY = "ant_velocity"
+CHEETAH_VELOCITY = "cheetah_velocity"
+HOPPER_DYNAMICS = "hopper_dynamics"
+POINT_NAVIGATION = "point_navigation"
 
 SUPPORTED_ENVIRONMENTS = [
     POINT_NAVIGATION,
     CHEETAH_VELOCITY,
     ANT_NAVIGATION,
     ANT_VELOCITY,
+    HOPPER_DYNAMICS,
 ]
 
 RL_SQUARED = "rl_squared"

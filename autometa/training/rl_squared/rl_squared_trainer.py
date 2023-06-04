@@ -146,8 +146,10 @@ class RLSquaredTrainer(BaseTrainer):
         vec_normalized = get_vec_normalize(self.vectorized_envs)
 
         checkpoint = RLSquaredCheckpoint(
-            wandb_run_id = (
-                wandb.run.id if (self.wandb_initialized and wandb and wandb.run) else None
+            wandb_run_id=(
+                wandb.run.id
+                if (self.wandb_initialized and wandb and wandb.run)
+                else None
             ),
             current_iteration=self.current_iteration,
             actor_state_dict=self.actor_critic.actor.state_dict(),

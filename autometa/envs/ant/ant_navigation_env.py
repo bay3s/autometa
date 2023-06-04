@@ -196,7 +196,9 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
 
         goal_reward = -1.0 * np.abs(new_position - self._target_state).sum()
         ctrl_cost = 0.1 * np.square(action).sum()
-        contact_cost = 0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
+        contact_cost = (
+            0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
+        )
         survive_reward = 0.0
 
         reward = goal_reward - ctrl_cost - contact_cost + survive_reward

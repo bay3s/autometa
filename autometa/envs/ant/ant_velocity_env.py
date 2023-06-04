@@ -13,21 +13,21 @@ from autometa.randomization.randomization_bound import RandomizationBound
 class AntVelocityEnv(BaseAntEnv, EzPickle):
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
-            name = "target_velocity",
-            lower_bound = RandomizationBound(
-                type = RandomizationBoundType.LOWER_BOUND,
-                value = 0.0,
-                min_value = 0.0,
-                max_value = 0.0,
-                frozen = True,
+            name="target_velocity",
+            lower_bound=RandomizationBound(
+                type=RandomizationBoundType.LOWER_BOUND,
+                value=0.0,
+                min_value=0.0,
+                max_value=0.0,
+                frozen=True,
             ),
-            upper_bound = RandomizationBound(
-                type = RandomizationBoundType.UPPER_BOUND,
-                value = 0.0,
-                min_value = 0.0,
-                max_value = 3.0,
+            upper_bound=RandomizationBound(
+                type=RandomizationBoundType.UPPER_BOUND,
+                value=0.0,
+                min_value=0.0,
+                max_value=3.0,
             ),
-            delta = 0.05,
+            delta=0.05,
         ),
     ]
 
@@ -173,11 +173,15 @@ class AntVelocityEnv(BaseAntEnv, EzPickle):
         position_after = self.get_body_com("torso")[0]
 
         forward_velocity = (position_after - position_before) / self.dt
-        forward_reward = -1.0 * np.abs(forward_velocity - self._target_velocity.item()) + 1.0
+        forward_reward = (
+            -1.0 * np.abs(forward_velocity - self._target_velocity.item()) + 1.0
+        )
         survive_reward = 0.05
 
         ctrl_cost = 0.5 * 1e-2 * np.square(action).sum()
-        contact_cost = 0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
+        contact_cost = (
+            0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
+        )
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         self._episode_reward += reward
 
