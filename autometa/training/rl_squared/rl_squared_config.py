@@ -9,7 +9,7 @@ class RLSquaredConfig(BaseTrainingConfig):
     Dataclass to keep track of experiment configs.
 
     Params:
-      algo (str): Algo to train.
+      algo (str): Training algo (eg. PPO).
       env_name (str): Environment to use for training.
       env_configs (dict): Additional configs for each of the meta-environments.
       max_policy_iterations (int): Number of total steps to train over.
@@ -31,10 +31,6 @@ class RLSquaredConfig(BaseTrainingConfig):
       ppo_num_minibatches (int): Number of minibatches for PPO
       use_gae (bool): Whether to use generalized advantage estimates.
       gae_lambda (float): Lambda parameter for GAE.
-      log_interval (int): Interval between logging.
-      log_dir (str): Directory to log to.
-      checkpoint_interval (int): Number of updates between each checkpoint.
-      checkpoint_all (bool): Whether to checkpoint all models or just the last one.
     """
 
     pass

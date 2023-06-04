@@ -8,11 +8,9 @@ class BaseTrainingConfig:
     Base dataclass to keep track of experiment configs.
 
     Params:
-      algo (str): Algo to train.
-      env_id (str): Environment to use for training.
+      algo (str): Training algo (eg. PPO).
+      env_name (str): Environment to use for training.
       env_configs (dict): Additional configs for each of the meta-environments.
-      normalize_obs (bool): Whether to normalize observations.
-      normalize_rew (bool): Whether to normalize observations.
       max_policy_iterations (int): Number of total steps to train over.
       actor_lr (float): Learning rate of the actor.
       critic_lr (float): Learning rate of the critic / value function.
