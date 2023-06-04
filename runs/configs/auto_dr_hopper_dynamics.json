@@ -28,7 +28,7 @@
   "norm_rewards": true,
   "adr_evaluation_probability": 0.5,
   "adr_performance_buffer_size": 5,
-  "adr_performance_threshold_lower": 1000,
-  "adr_performance_threshold_upper": 1500,
+  "adr_performance_threshold_lower": 300,
+  "adr_performance_threshold_upper": 500,
   "adr_delta": 0.05
 }
