@@ -35,6 +35,7 @@ class AutoDRConfig(BaseTrainingConfig):
       adr_performance_buffer_size (int): Buffer size used for evaluation.
       adr_performance_threshold_lower (int): Lower threshold for performance, if this is not met entropy is reduced.
       adr_performance_threshold_upper (int): Upper threshold for performance, if this is met entropy is increased.
+      adr_delta (float): Delta value for auto-dr.
     """
 
     # adr
@@ -42,4 +43,5 @@ class AutoDRConfig(BaseTrainingConfig):
     adr_performance_buffer_size: int
     adr_performance_threshold_lower: int
     adr_performance_threshold_upper: int
+    adr_delta: float
     pass
