@@ -274,13 +274,13 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         mass_multipliers = np.array(self.MASS_COEFFICIENT) ** task["mass_scaling"]
         inertia_multipliers = np.array(self.INERTIA_COEFFICIENT) ** task["inertia_scaling"]
         damping_multipliers = np.array(self.DAMPING_COEFFICIENT) ** task["damping_scaling"]
-        fricition_multipliers = np.array(self.FRICTION_COEFFICIENT) ** task["friction_scaling"]
+        friction_multipliers = np.array(self.FRICTION_COEFFICIENT) ** task["friction_scaling"]
 
         return {
             "body_mass": self._initial_mass * mass_multipliers,
             "body_inertia": self._initial_inertia * inertia_multipliers,
             "dof_damping": self._initial_damping * damping_multipliers,
-            "geom_friction": self._initial_friction * fricition_multipliers
+            "geom_friction": self._initial_friction * friction_multipliers
         }
 
     def _update_sim(self, params: dict) -> None:
