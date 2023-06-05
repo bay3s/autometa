@@ -277,9 +277,10 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         qvel = self.init_qvel + self.np_random.uniform(
             low=-0.005, high=0.005, size=self.model.nv
         )
+
         self.set_state(qpos, qvel)
 
-        return BaseHopperEnv.reset(self, seed=seed, options=options)
+        return self._get_obs(), {}
 
     @property
     def elapsed_steps(self) -> int:
