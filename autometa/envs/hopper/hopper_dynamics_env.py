@@ -228,28 +228,28 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             task = dict()
 
             mass_scaling = self.randomized_parameter("mass_scaling")
-            task["mass_scaling"] = np.random.uniform(
+            task["mass_scaling"] = self.np_random.uniform(
                 mass_scaling.lower_bound.min_value,
                 mass_scaling.upper_bound.max_value,
                 size=self.model.body_mass.shape
             )
 
             inertia_scaling = self.randomized_parameter("inertia_scaling")
-            task["inertia_scaling"] = np.random.uniform(
+            task["inertia_scaling"] = self.np_random.uniform(
                 inertia_scaling.lower_bound.min_value,
                 inertia_scaling.upper_bound.max_value,
                 size = self.model.body_inertia.shape
             )
 
             damping_scaling = self.randomized_parameter("damping_scaling")
-            task["damping_scaling"] = np.random.uniform(
+            task["damping_scaling"] = self.np_random.uniform(
                 damping_scaling.lower_bound.min_value,
                 damping_scaling.upper_bound.max_value,
                 size = self.model.dof_damping.shape
             )
 
             friction_scaling = self.randomized_parameter("friction_scaling")
-            task["friction_scaling"] = np.random.uniform(
+            task["friction_scaling"] = self.np_random.uniform(
                 friction_scaling.lower_bound.min_value,
                 friction_scaling.upper_bound.max_value,
                 size = self.model.geom_friction.shape
