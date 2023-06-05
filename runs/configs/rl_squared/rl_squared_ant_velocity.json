@@ -23,7 +23,7 @@
   "ppo_entropy_coef": 0.01,
   "ppo_value_loss_coef": 0.5,
   "use_gae": true,
-  "gae_lambda": 0.90,
+  "gae_lambda": 0.95,
   "norm_observations": true,
   "norm_rewards": true
 }
