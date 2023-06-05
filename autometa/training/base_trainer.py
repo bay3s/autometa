@@ -1,5 +1,6 @@
 from datetime import datetime
 from abc import ABC, abstractmethod
+from pathlib import Path
 import os
 
 import torch
@@ -118,6 +119,16 @@ class BaseTrainer(ABC):
             outfile.write(self.config.to_json())
             pass
 
+    @staticmethod
+    def logs_directory() -> str:
+        """
+        Returns the directory in which to archive run logs.
+
+        Returns:
+            str
+        """
+        return absolute_path(f"logs/")
+
     def wandb_init(self, is_dev: bool) -> None:
         """
         Initalize wandb for the current training run.
@@ -128,20 +139,26 @@ class BaseTrainer(ABC):
         Returns:
             None
         """
+        # login
         wandb.login()
         project_suffix = "-dev" if is_dev else ""
 
+        # logs
+        logs_directory = self.logs_directory()
+        Path(logs_directory).mkdir(parents = True, exist_ok = True)
+
+        # init
         if self.checkpoint is None or self.checkpoint.wandb_run_id is None:
             wandb.init(
                 project=f"autometa{project_suffix}",
                 config=self.config.to_dict(),
-                dir = self.directory
+                dir = logs_directory
             )
         else:
             wandb.init(
                 project=f"autometa{project_suffix}",
                 id=self.checkpoint.wandb_run_id,
-                dir = self.directory
+                dir = logs_directory
             )
             pass
 
