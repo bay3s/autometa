@@ -5,9 +5,7 @@ import random
 import gym
 import numpy as np
 
-from autometa.randomization.randomization_performance_buffer import (
-    RandomizationPerformanceBuffer,
-)
+from autometa.randomization.randomization_performance_buffer import RandomizationPerformanceBuffer
 from autometa.randomization.randomization_parameter import RandomizationParameter
 from autometa.randomization.randomization_bound_type import RandomizationBoundType
 from autometa.randomization.randomization_boundary import RandomizationBoundary
