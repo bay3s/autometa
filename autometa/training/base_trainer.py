@@ -135,11 +135,13 @@ class BaseTrainer(ABC):
             wandb.init(
                 project=f"autometa{project_suffix}",
                 config=self.config.to_dict(),
+                dir = self.directory
             )
         else:
             wandb.init(
                 project=f"autometa{project_suffix}",
                 id=self.checkpoint.wandb_run_id,
+                dir = self.directory
             )
             pass
 
