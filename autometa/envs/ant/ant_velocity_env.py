@@ -186,8 +186,10 @@ class AntVelocityEnv(BaseAntEnv, EzPickle):
         self._episode_reward += reward
 
         observation = self._get_obs()
+        state = self.state_vector()
 
-        terminated = False
+        not_terminated = np.isfinite(state).all() and 0.2 <= state[2] <= 1.0
+        terminated = not not_terminated
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 
