@@ -195,20 +195,18 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
         new_position = self.get_body_com("torso")[:2]
 
         goal_reward = -1.0 * np.abs(new_position - self._target_state).sum()
+        survive_reward = 0.0
+
         ctrl_cost = 0.1 * np.square(action).sum()
         contact_cost = (
             0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
         )
-        survive_reward = 0.0
 
         reward = goal_reward - ctrl_cost - contact_cost + survive_reward
         self._episode_reward += reward
 
         observation = self._get_obs()
-
-        state = self.state_vector()
-        not_terminated = np.isfinite(state).all() and 0.2 <= state[2] <= 1.0
-        terminated = not not_terminated
+        terminated = False
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 
