@@ -13,7 +13,7 @@
   "cuda_deterministic": false,
   "use_cuda": true,
   "policy_iterations": 500,
-  "meta_episode_length": 800,
+  "meta_episode_length": 400,
   "meta_episodes_per_epoch": 125,
   "num_processes": 25,
   "discount_gamma": 0.97,
