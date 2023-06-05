@@ -10,65 +10,78 @@ from autometa.randomization.randomization_bound import RandomizationBound
 
 
 class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
-    THIGH_MASS_INIT = 3.92699082
-    THIGH_MASS_IDX = 2
-
-    LEG_MASS_INIT = 2.71433605
-    LEG_MASS_IDX = 3
-
-    FOOT_MASS_INIT = 5.0893801
-    FOOT_MASS_IDX = 4
 
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
-            name="thigh_mass",
+            name="mass_scaling",
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
-                value=THIGH_MASS_INIT,
-                min_value=THIGH_MASS_INIT - 2.0,
-                max_value=THIGH_MASS_INIT,
+                value=0,
+                min_value=-3.0,
+                max_value=0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
-                value=THIGH_MASS_INIT,
-                min_value=THIGH_MASS_INIT,
-                max_value=THIGH_MASS_INIT + 2.0,
+                value=0,
+                min_value=0,
+                max_value=3.0,
             ),
             delta=0.05,
         ),
         RandomizationParameter(
-            name="leg_mass",
+            name = "inertia_scaling",
+            lower_bound = RandomizationBound(
+                type = RandomizationBoundType.LOWER_BOUND,
+                value = 0,
+                min_value = -3.0,
+                max_value = 0,
+            ),
+            upper_bound = RandomizationBound(
+                type = RandomizationBoundType.UPPER_BOUND,
+                value = 0,
+                min_value = 0,
+                max_value = 3.0,
+            ),
+            delta = 0.05,
+        ),
+        RandomizationParameter(
+            name="damping_scaling",
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
-                value=LEG_MASS_INIT,
-                min_value=LEG_MASS_INIT - 2.0,
-                max_value=LEG_MASS_INIT,
+                value=0,
+                min_value=-3.0,
+                max_value=0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
-                value=LEG_MASS_INIT,
-                min_value=LEG_MASS_INIT,
-                max_value=LEG_MASS_INIT + 2.0,
+                value=0,
+                min_value=0,
+                max_value=3.0,
             ),
             delta=0.05,
         ),
         RandomizationParameter(
-            name="foot_mass",
-            lower_bound=RandomizationBound(
-                type=RandomizationBoundType.LOWER_BOUND,
-                value=FOOT_MASS_INIT,
-                min_value=FOOT_MASS_INIT - 2.0,
-                max_value=FOOT_MASS_INIT,
+            name = "friction_scaling",
+            lower_bound = RandomizationBound(
+                type = RandomizationBoundType.LOWER_BOUND,
+                value = 0,
+                min_value = -3.0,
+                max_value = 0,
             ),
-            upper_bound=RandomizationBound(
-                type=RandomizationBoundType.UPPER_BOUND,
-                value=FOOT_MASS_INIT,
-                min_value=FOOT_MASS_INIT,
-                max_value=FOOT_MASS_INIT + 2.0,
+            upper_bound = RandomizationBound(
+                type = RandomizationBoundType.UPPER_BOUND,
+                value = 0,
+                min_value = 0,
+                max_value = 3.0,
             ),
-            delta=0.05,
+            delta = 0.05,
         ),
     ]
+
+    MASS_COEFFICIENT = 1.5
+    INERTIA_COEFFICIENT = 1.5
+    DAMPING_COEFFICIENT = 1.3
+    FRICTION_COEFFICIENT = 1.5
 
     def __init__(
         self,
@@ -101,20 +114,17 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         self._auto_reset = auto_reset
         self._episode_reward = 0.0
 
-        # params
-        self._randomized_parameters = self._init_params(randomizable_parameters)
-
         BaseHopperEnv.__init__(self)
         EzPickle.__init__(self)
 
-        # @todo remove
-        self.log_scale_limit = 3.0
-        self.init_params = dict()
-        self.init_params['body_mass'] = self.model.body_mass
-        self.init_params['body_inertia'] = self.model.body_inertia
-        self.init_params['dof_damping'] = self.model.dof_damping
-        self.init_params['geom_friction'] = self.model.geom_friction
-        self.cur_params = self.init_params
+        # initial
+        self._initial_mass = self.model.body_mass
+        self._initial_inertia = self.model.body_inertia
+        self._initial_damping = self.model.dof_damping
+        self._initial_friction = self.model.geom_friction
+
+        # randomization
+        self._randomized_parameters = self._init_params(randomizable_parameters)
 
         # sample
         self.seed(seed)
@@ -201,46 +211,67 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         Returns:
             None
         """
-        new_params = {}
 
-        body_mass_multipliers = np.array(1.5) ** np.random.uniform(
-            -self.log_scale_limit, self.log_scale_limit, size=self.model.body_mass.shape
-        )
+        if task is None:
+            task = dict()
 
-        new_params["body_mass"] = self.init_params["body_mass"] * body_mass_multipliers
+            mass_scaling = self.randomized_parameter("mass_scaling")
+            task["mass_scaling"] = np.random.uniform(
+                mass_scaling.lower_bound.min_value,
+                mass_scaling.upper_bound.max_value,
+                size=self.model.body_mass.shape
+            )
 
-        # body_inertia
-        body_inertia_multiplyers = np.array(1.5) ** np.random.uniform(
-            -self.log_scale_limit,
-            self.log_scale_limit,
-            size=self.model.body_inertia.shape,
-        )
+            inertia_scaling = self.randomized_parameter("inertia_scaling")
+            task["inertia_scaling"] = np.random.uniform(
+                inertia_scaling.lower_bound.min_value,
+                inertia_scaling.upper_bound.max_value,
+                size = self.model.body_inertia.shape
+            )
 
-        new_params["body_inertia"] = body_inertia_multiplyers * self.init_params["body_inertia"]
+            damping_scaling = self.randomized_parameter("damping_scaling")
+            task["damping_scaling"] = np.random.uniform(
+                damping_scaling.lower_bound.min_value,
+                damping_scaling.upper_bound.max_value,
+                size = self.model.dof_damping.shape
+            )
 
-        dof_damping_multipliers = np.array(1.3) ** np.random.uniform(
-            -self.log_scale_limit,
-            self.log_scale_limit,
-            size=self.model.dof_damping.shape,
-        )
+            friction_scaling = self.randomized_parameter("friction_scaling")
+            task["friction_scaling"] = np.random.uniform(
+                friction_scaling.lower_bound.min_value,
+                friction_scaling.upper_bound.max_value,
+                size = self.model.geom_friction.shape
+            )
+            pass
 
-        new_params["dof_damping"] = np.multiply(self.init_params["dof_damping"], dof_damping_multipliers)
-
-        # friction at the body components
-        dof_damping_multipliers = np.array(1.5) ** np.random.uniform(
-            -self.log_scale_limit,
-            self.log_scale_limit,
-            size=self.model.geom_friction.shape,
-        )
-
-        new_params["geom_friction"] = np.multiply(
-            self.init_params["geom_friction"], dof_damping_multipliers
-        )
-
-        self.set_task(new_params)
+        # update
+        sim_params = self._compute_sim_params(task)
+        self._update_sim(sim_params)
         pass
 
-    def set_task(self, task: dict) -> None:
+    def _compute_sim_params(self, task: dict) -> dict:
+        """
+        Compute updated simulation parameters based on the sampled task.
+
+        Args:
+            task (dict): Sampled task
+
+        Returns:
+            dict
+        """
+        mass_multipliers = np.array(self.MASS_COEFFICIENT) ** task["mass_scaling"]
+        inertia_multipliers = np.array(self.INERTIA_COEFFICIENT) ** task["inertia_scaling"]
+        damping_multipliers = np.array(self.DAMPING_COEFFICIENT) ** task["damping_scaling"]
+        fricition_multipliers = np.array(self.FRICTION_COEFFICIENT) ** task["friction_scaling"]
+
+        return {
+            "body_mass": self._initial_mass * mass_multipliers,
+            "body_inertia": self._initial_inertia * inertia_multipliers,
+            "dof_damping": self._initial_damping * damping_multipliers,
+            "geom_friction": self._initial_friction * fricition_multipliers
+        }
+
+    def _update_sim(self, task: dict) -> None:
         """
         Update the dynamics of the hopper with the task.
 
