@@ -201,42 +201,42 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         Returns:
             None
         """
-        new_params = {}
-
-        body_mass_multipliers = np.array(1.5) ** np.random.uniform(
-            -self.log_scale_limit, self.log_scale_limit, size=self.model.body_mass.shape
-        )
-
-        new_params["body_mass"] = self.init_params["body_mass"] * body_mass_multipliers
-
-        # body_inertia
-        body_inertia_multiplyers = np.array(1.5) ** np.random.uniform(
-            -self.log_scale_limit,
-            self.log_scale_limit,
-            size=self.model.body_inertia.shape,
-        )
-
-        new_params["body_inertia"] = body_inertia_multiplyers * self.init_params["body_inertia"]
-
-        dof_damping_multipliers = np.array(1.3) ** np.random.uniform(
-            -self.log_scale_limit,
-            self.log_scale_limit,
-            size=self.model.dof_damping.shape,
-        )
-
-        new_params["dof_damping"] = np.multiply(self.init_params["dof_damping"], dof_damping_multipliers)
-
-        # friction at the body components
-        dof_damping_multipliers = np.array(1.5) ** np.random.uniform(
-            -self.log_scale_limit,
-            self.log_scale_limit,
-            size=self.model.geom_friction.shape,
-        )
-        new_params["geom_friction"] = np.multiply(
-            self.init_params["geom_friction"], dof_damping_multipliers
-        )
-
-        self.set_task(new_params)
+        # new_params = {}
+        #
+        # body_mass_multipliers = np.array(1.5) ** np.random.uniform(
+        #     -self.log_scale_limit, self.log_scale_limit, size=self.model.body_mass.shape
+        # )
+        #
+        # new_params["body_mass"] = self.init_params["body_mass"] * body_mass_multipliers
+        #
+        # # body_inertia
+        # body_inertia_multiplyers = np.array(1.5) ** np.random.uniform(
+        #     -self.log_scale_limit,
+        #     self.log_scale_limit,
+        #     size=self.model.body_inertia.shape,
+        # )
+        #
+        # new_params["body_inertia"] = body_inertia_multiplyers * self.init_params["body_inertia"]
+        #
+        # dof_damping_multipliers = np.array(1.3) ** np.random.uniform(
+        #     -self.log_scale_limit,
+        #     self.log_scale_limit,
+        #     size=self.model.dof_damping.shape,
+        # )
+        #
+        # new_params["dof_damping"] = np.multiply(self.init_params["dof_damping"], dof_damping_multipliers)
+        #
+        # # friction at the body components
+        # dof_damping_multipliers = np.array(1.5) ** np.random.uniform(
+        #     -self.log_scale_limit,
+        #     self.log_scale_limit,
+        #     size=self.model.geom_friction.shape,
+        # )
+        # new_params["geom_friction"] = np.multiply(
+        #     self.init_params["geom_friction"], dof_damping_multipliers
+        # )
+        #
+        # self.set_task(new_params)
         pass
 
     def set_task(self, task: dict) -> None:
