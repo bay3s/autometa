@@ -3,7 +3,7 @@
   "env_id": "PointNavigation-v1",
   "random_seed": 6785,
   "env_configs": {
-    "episode_length": 250
+    "episode_length": 200
   },
   "actor_lr": 0.0003,
   "critic_lr": 0.0001,
@@ -13,8 +13,8 @@
   "cuda_deterministic": false,
   "use_cuda": true,
   "policy_iterations": 200,
-  "meta_episode_length": 500,
-  "meta_episodes_per_epoch": 100,
+  "meta_episode_length": 400,
+  "meta_episodes_per_epoch": 125,
   "num_processes": 25,
   "discount_gamma": 0.99,
   "ppo_opt_epochs": 5,
