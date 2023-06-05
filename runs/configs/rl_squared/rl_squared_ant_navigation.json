@@ -18,7 +18,7 @@
   "num_processes": 25,
   "discount_gamma": 0.99,
   "ppo_opt_epochs": 5,
-  "ppo_num_minibatches": 50,
+  "ppo_num_minibatches": 25,
   "ppo_clip_param": 0.1,
   "ppo_entropy_coef": 0.01,
   "ppo_value_loss_coef": 0.5,
