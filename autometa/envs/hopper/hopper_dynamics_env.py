@@ -215,9 +215,8 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             self.log_scale_limit,
             size=self.model.body_inertia.shape,
         )
-        new_params["body_inertia"] = (
-            body_inertia_multiplyers * self.init_params["body_inertia"]
-        )
+
+        new_params["body_inertia"] = body_inertia_multiplyers * self.init_params["body_inertia"]
 
         dof_damping_multipliers = np.array(1.3) ** np.random.uniform(
             -self.log_scale_limit,
@@ -225,9 +224,7 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             size=self.model.dof_damping.shape,
         )
 
-        new_params["dof_damping"] = np.multiply(
-            self.init_params["dof_damping"], dof_damping_multipliers
-        )
+        new_params["dof_damping"] = np.multiply(self.init_params["dof_damping"], dof_damping_multipliers)
 
         # friction at the body components
         dof_damping_multipliers = np.array(1.5) ** np.random.uniform(

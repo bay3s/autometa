@@ -105,7 +105,7 @@ if __name__ == "__main__":
         )
 
     # config
-    config_path = absolute_path(f"runs/configs/{args.algo}_{args.env}.json")
+    config_path = absolute_path(f"runs/configs/{args.algo}/{args.algo}_{args.env}.json")
     config_cls = RLSquaredConfig if args.algo == RL_SQUARED else AutoDRConfig
     training_config = config_cls.from_json(config_path)
 
