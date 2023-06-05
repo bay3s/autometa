@@ -2,6 +2,7 @@ from typing import Tuple, Optional, List
 
 import numpy as np
 from gym.utils import EzPickle, seeding
+import mujoco_py
 
 from autometa.envs.hopper.base_hopper_env import BaseHopperEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
@@ -182,9 +183,21 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         """
         self._elapsed_steps += 1
 
-        observation, reward, terminated, truncated, info = BaseHopperEnv.step(
-            self, action
-        )
+        try:
+            observation, reward, terminated, truncated, info = BaseHopperEnv.step(
+                self, action
+            )
+        except mujoco_py.builder.MujocoException as e:
+            print(self.model.body_mass)
+            print(self.model.dof_damping)
+            print(self.model.geom_friction)
+            print(self.model.body_inertia)
+            print(e)
+
+            terminated = False
+            reward = 0.0
+            observation = self._get_obs()
+            pass
 
         self._episode_reward += reward
         truncated = self.elapsed_steps == self.max_episode_steps
@@ -211,7 +224,6 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         Returns:
             None
         """
-
         if task is None:
             task = dict()
 
@@ -245,8 +257,8 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             pass
 
         # update
-        sim_params = self._compute_sim_params(task)
-        self._update_sim(sim_params)
+        new_params = self._compute_sim_params(task)
+        self._update_sim(new_params)
         pass
 
     def _compute_sim_params(self, task: dict) -> dict:
@@ -271,17 +283,20 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             "geom_friction": self._initial_friction * fricition_multipliers
         }
 
-    def _update_sim(self, task: dict) -> None:
+    def _update_sim(self, params: dict) -> None:
         """
-        Update the dynamics of the hopper with the task.
+        Update the simulation dynamics.
+
+        Args:
+            params (dict): New parameters for the simulation.
 
         Returns:
             None
         """
-        self.model.body_mass[:] = task["body_mass"][:]
-        self.model.body_inertia[:] = task["body_inertia"][:]
-        self.model.dof_damping[:] = task["dof_damping"][:]
-        self.model.geom_friction[:] = task["geom_friction"][:]
+        self.model.body_mass[:] = params["body_mass"][:]
+        self.model.body_inertia[:] = params["body_inertia"][:]
+        self.model.dof_damping[:] = params["dof_damping"][:]
+        self.model.geom_friction[:] = params["geom_friction"][:]
         pass
 
     def reset(
