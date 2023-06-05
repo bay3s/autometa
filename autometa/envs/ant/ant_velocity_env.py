@@ -182,12 +182,14 @@ class AntVelocityEnv(BaseAntEnv, EzPickle):
         contact_cost = (
             0.5 * 1e-3 * np.square(np.clip(self.sim.data.cfrc_ext, -1, 1)).sum()
         )
-
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         self._episode_reward += reward
 
         observation = self._get_obs()
-        terminated = False
+        state = self.state_vector()
+
+        not_terminated = np.isfinite(state).all() and 0.2 <= state[2] <= 1.0
+        terminated = not not_terminated
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 
