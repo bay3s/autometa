@@ -1,5 +1,6 @@
 from typing import Tuple, Optional, List
 
+import math
 import numpy as np
 from gym.utils import EzPickle, seeding
 
@@ -294,10 +295,12 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         Returns:
             None
         """
-        self.model.body_mass[:] = params["body_mass"][:]
-        self.model.body_inertia[:] = params["body_inertia"][:]
-        # self.model.dof_damping[:] = params["dof_damping"][:]
-        self.model.geom_friction[:] = params["geom_friction"][:]
+        eps_min = 1e-4
+        eps_max = math.inf
+        self.model.body_mass[1:] = np.clip(params["body_mass"][1:], a_min = eps_min, a_max = eps_max)
+        # self.model.body_inertia[:] = params["body_inertia"][:] + eps
+        # self.model.dof_damping[:] = params["dof_damping"][:] + eps
+        # self.model.geom_friction[:] = params["geom_friction"][:] + eps
         pass
 
     def reset(
