@@ -1,4 +1,5 @@
 from typing import Tuple, Optional, List
+from copy import deepcopy
 
 import numpy as np
 from gym.utils import EzPickle, seeding
@@ -120,10 +121,10 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
         EzPickle.__init__(self)
 
         # initial
-        self._initial_mass = self.model.body_mass
-        self._initial_inertia = self.model.body_inertia
-        self._initial_damping = self.model.dof_damping
-        self._initial_friction = self.model.geom_friction
+        self._initial_damping = deepcopy(self.model.dof_damping)
+        self._initial_mass = deepcopy(self.model.body_mass)
+        self._initial_inertia = deepcopy(self.model.body_inertia)
+        self._initial_friction = deepcopy(self.model.geom_friction)
 
         # randomization
         self._randomized_parameters = self._init_params(randomizable_parameters)
