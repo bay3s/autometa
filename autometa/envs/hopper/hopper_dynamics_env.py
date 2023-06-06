@@ -2,7 +2,6 @@ from typing import Tuple, Optional, List
 
 import numpy as np
 from gym.utils import EzPickle, seeding
-import mujoco_py
 
 from autometa.envs.hopper.base_hopper_env import BaseHopperEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
