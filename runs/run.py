@@ -113,15 +113,13 @@ if __name__ == "__main__":
 
     # trainer
     trainer_cls = RLSquaredTrainer if args.algo == RL_SQUARED else AutoDRTrainer
-    trainer = trainer_cls(
-        config=training_config, checkpoint_path=args.checkpoint
-    )
+    trainer = trainer_cls(config=training_config, checkpoint_path=args.checkpoint)
 
     # train
     trainer.train(
         enable_wandb=not args.disable_wandb,
         is_dev=not args.prod,
         checkpoint_interval=args.checkpoint_interval,
-        checkpoint_all = args.checkpoint_all
+        checkpoint_all=args.checkpoint_all,
     )
     pass

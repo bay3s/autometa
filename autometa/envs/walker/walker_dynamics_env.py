@@ -1,7 +1,6 @@
 from typing import Tuple, Optional, List
 
 from copy import deepcopy
-import math
 import numpy as np
 from gym.utils import EzPickle, seeding
 import mujoco_py
@@ -10,6 +9,7 @@ from autometa.envs.walker.base_walker_env import BaseWalkerEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
 from autometa.randomization.randomization_bound_type import RandomizationBoundType
 from autometa.randomization.randomization_bound import RandomizationBound
+
 
 class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
 
@@ -33,20 +33,20 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
             delta=0.05,
         ),
         RandomizationParameter(
-            name = "inertia_scaling",
-            lower_bound = RandomizationBound(
-                type = RandomizationBoundType.LOWER_BOUND,
-                value = 0,
-                min_value = -SCALING_FACTOR,
-                max_value = 0,
+            name="inertia_scaling",
+            lower_bound=RandomizationBound(
+                type=RandomizationBoundType.LOWER_BOUND,
+                value=0,
+                min_value=-SCALING_FACTOR,
+                max_value=0,
             ),
-            upper_bound = RandomizationBound(
-                type = RandomizationBoundType.UPPER_BOUND,
-                value = 0,
-                min_value = 0,
-                max_value = SCALING_FACTOR,
+            upper_bound=RandomizationBound(
+                type=RandomizationBoundType.UPPER_BOUND,
+                value=0,
+                min_value=0,
+                max_value=SCALING_FACTOR,
             ),
-            delta = 0.05,
+            delta=0.05,
         ),
         RandomizationParameter(
             name="damping_scaling",
@@ -65,20 +65,20 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
             delta=0.05,
         ),
         RandomizationParameter(
-            name = "friction_scaling",
-            lower_bound = RandomizationBound(
-                type = RandomizationBoundType.LOWER_BOUND,
-                value = 0,
-                min_value = -0.0,
-                max_value = 0,
+            name="friction_scaling",
+            lower_bound=RandomizationBound(
+                type=RandomizationBoundType.LOWER_BOUND,
+                value=0,
+                min_value=-SCALING_FACTOR,
+                max_value=0,
             ),
-            upper_bound = RandomizationBound(
-                type = RandomizationBoundType.UPPER_BOUND,
-                value = 0,
-                min_value = 0,
-                max_value = 0.0,
+            upper_bound=RandomizationBound(
+                type=RandomizationBoundType.UPPER_BOUND,
+                value=0,
+                min_value=0,
+                max_value=SCALING_FACTOR,
             ),
-            delta = 0.05,
+            delta=0.05,
         ),
     ]
 
@@ -122,9 +122,9 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         EzPickle.__init__(self)
 
         # initial
+        self._initial_damping = deepcopy(self.model.dof_damping)
         self._initial_mass = deepcopy(self.model.body_mass)
         self._initial_inertia = deepcopy(self.model.body_inertia)
-        self._initial_damping = deepcopy(self.model.dof_damping)
         self._initial_friction = deepcopy(self.model.geom_friction)
 
         # randomization
@@ -243,28 +243,28 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
             task["mass_scaling"] = self.np_random.uniform(
                 mass_scaling.lower_bound.min_value,
                 mass_scaling.upper_bound.max_value,
-                size=self.model.body_mass.shape
+                size=self.model.body_mass.shape,
             )
 
             inertia_scaling = self.randomized_parameter("inertia_scaling")
             task["inertia_scaling"] = self.np_random.uniform(
                 inertia_scaling.lower_bound.min_value,
                 inertia_scaling.upper_bound.max_value,
-                size = self.model.body_inertia.shape
+                size=self.model.body_inertia.shape,
             )
 
             damping_scaling = self.randomized_parameter("damping_scaling")
             task["damping_scaling"] = self.np_random.uniform(
                 damping_scaling.lower_bound.min_value,
                 damping_scaling.upper_bound.max_value,
-                size = self.model.dof_damping.shape
+                size=self.model.dof_damping.shape,
             )
 
             friction_scaling = self.randomized_parameter("friction_scaling")
             task["friction_scaling"] = self.np_random.uniform(
                 friction_scaling.lower_bound.min_value,
                 friction_scaling.upper_bound.max_value,
-                size = self.model.geom_friction.shape
+                size=self.model.geom_friction.shape,
             )
             pass
 
@@ -284,18 +284,24 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
             dict
         """
         mass_multiplier = np.array(self.MASS_COEFFICIENT) ** task["mass_scaling"]
-        inertia_multiplier = np.array(self.INERTIA_COEFFICIENT) ** task["inertia_scaling"]
-        damping_multiplier = np.array(self.DAMPING_COEFFICIENT) ** task["damping_scaling"]
-        friction_multiplier = np.array(self.FRICTION_COEFFICIENT) ** task["friction_scaling"]
+        inertia_multiplier = (
+            np.array(self.INERTIA_COEFFICIENT) ** task["inertia_scaling"]
+        )
+        damping_multiplier = (
+            np.array(self.DAMPING_COEFFICIENT) ** task["damping_scaling"]
+        )
+        friction_multiplier = (
+            np.array(self.FRICTION_COEFFICIENT) ** task["friction_scaling"]
+        )
 
         return {
             "body_mass": self._initial_mass * mass_multiplier,
             "body_inertia": self._initial_inertia * inertia_multiplier,
             "dof_damping": self._initial_damping * damping_multiplier,
-            "geom_friction": self._initial_friction * friction_multiplier
+            "geom_friction": self._initial_friction * friction_multiplier,
         }
 
-    def _update_sim(self, params: dict, min_param: float = 1e-3) -> None:
+    def _update_sim(self, params: dict) -> None:
         """
         Update the simulation dynamics.
 
@@ -344,8 +350,10 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         self._episode_reward = 0.0
 
         self.set_state(
-            self.init_qpos + self.np_random.uniform(low = -.005, high = .005, size = self.model.nq),
-            self.init_qvel + self.np_random.uniform(low = -.005, high = .005, size = self.model.nv)
+            self.init_qpos
+            + self.np_random.uniform(low=-0.005, high=0.005, size=self.model.nq),
+            self.init_qvel
+            + self.np_random.uniform(low=-0.005, high=0.005, size=self.model.nv),
         )
 
         return self._get_obs(), {}

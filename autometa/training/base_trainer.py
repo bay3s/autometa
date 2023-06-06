@@ -145,20 +145,20 @@ class BaseTrainer(ABC):
 
         # logs
         logs_directory = self.logs_directory()
-        Path(logs_directory).mkdir(parents = True, exist_ok = True)
+        Path(logs_directory).mkdir(parents=True, exist_ok=True)
 
         # init
         if self.checkpoint is None or self.checkpoint.wandb_run_id is None:
             wandb.init(
                 project=f"autometa{project_suffix}",
                 config=self.config.to_dict(),
-                dir = logs_directory
+                dir=logs_directory,
             )
         else:
             wandb.init(
                 project=f"autometa{project_suffix}",
                 id=self.checkpoint.wandb_run_id,
-                dir = logs_directory
+                dir=logs_directory,
             )
             pass
 

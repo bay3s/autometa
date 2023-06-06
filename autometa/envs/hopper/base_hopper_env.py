@@ -27,10 +27,9 @@ class BaseHopperEnv(HopperEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             np.ndarray
         """
-        return np.concatenate([
-            self.sim.data.qpos.flat[1:],
-            np.clip(self.sim.data.qvel.flat, -10, 10)
-        ])
+        return np.concatenate(
+            [self.sim.data.qpos.flat[1:], np.clip(self.sim.data.qvel.flat, -10, 10)]
+        )
 
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """

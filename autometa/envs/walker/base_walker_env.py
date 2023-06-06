@@ -90,7 +90,7 @@ class BaseWalkerEnv(Walker2dEnv_, BaseRandomizedMujocoEnv, ABC):
         """
         self.viewer.cam.trackbodyid = 2
         self.viewer.cam.distance = self.model.stat.extent * 0.5
-        self.viewer.cam.lookat[2] += .8
+        self.viewer.cam.lookat[2] += 0.8
         self.viewer.cam.elevation = -20
         pass
 
