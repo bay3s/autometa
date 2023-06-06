@@ -4,7 +4,6 @@ from autometa.training.base_training_checkpoint import BaseTrainingCheckpoint
 
 
 class RLSquaredCheckpoint(BaseTrainingCheckpoint):
-
     @classmethod
     def load(cls, absolute_path: str, device: torch.device) -> "RLSquaredCheckpoint":
         """

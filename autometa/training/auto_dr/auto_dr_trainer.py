@@ -163,21 +163,23 @@ class AutoDRTrainer(BaseTrainer):
         vec_normalized = get_vec_normalize(self.vectorized_envs)
 
         checkpoint = AutoDRCheckpoint(
-            wandb_run_id = (
-                wandb.run.id if (self.wandb_initialized and wandb and wandb.run) else None
+            wandb_run_id=(
+                wandb.run.id
+                if (self.wandb_initialized and wandb and wandb.run)
+                else None
             ),
-            current_iteration = self.current_iteration,
-            actor_state_dict = self.actor_critic.actor.state_dict(),
-            critic_state_dict = self.actor_critic.critic.state_dict(),
-            optimizer_state_dict = self.ppo.optimizer.state_dict(),
-            observations_rms = (
+            current_iteration=self.current_iteration,
+            actor_state_dict=self.actor_critic.actor.state_dict(),
+            critic_state_dict=self.actor_critic.critic.state_dict(),
+            optimizer_state_dict=self.ppo.optimizer.state_dict(),
+            observations_rms=(
                 vec_normalized.obs_rms if vec_normalized is not None else None
             ),
-            rewards_rms = (
+            rewards_rms=(
                 vec_normalized.ret_rms if vec_normalized is not None else None
             ),
-            randomized_parameters = self.randomizer.randomized_parameters,
-            randomization_buffer = self.randomizer.buffer,
+            randomized_parameters=self.randomizer.randomized_parameters,
+            randomization_buffer=self.randomizer.buffer,
         )
 
         checkpoint.save(self.checkpoint_directory, checkpoint_name)

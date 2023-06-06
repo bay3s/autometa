@@ -1,5 +1,6 @@
 from datetime import datetime
 from abc import ABC, abstractmethod
+from pathlib import Path
 import os
 
 import torch
@@ -83,10 +84,14 @@ class BaseTrainer(ABC):
                 folder = folder.replace(ch, ch.lower())
 
         run_id = (
-            wandb.run.id if (self.wandb_initialized and wandb and wandb.run) else self.timestamp
+            wandb.run.id
+            if (self.wandb_initialized and wandb and wandb.run)
+            else self.timestamp
         )
 
-        self._directory = absolute_path(f"results/{self.config.algo}/{folder}/run-{run_id}/")
+        self._directory = absolute_path(
+            f"results/{self.config.algo}/{folder}/run-{run_id}/"
+        )
 
         return self._directory
 
@@ -114,6 +119,16 @@ class BaseTrainer(ABC):
             outfile.write(self.config.to_json())
             pass
 
+    @staticmethod
+    def logs_directory() -> str:
+        """
+        Returns the directory in which to archive run logs.
+
+        Returns:
+            str
+        """
+        return absolute_path(f"logs/")
+
     def wandb_init(self, is_dev: bool) -> None:
         """
         Initalize wandb for the current training run.
@@ -124,18 +139,26 @@ class BaseTrainer(ABC):
         Returns:
             None
         """
+        # login
         wandb.login()
         project_suffix = "-dev" if is_dev else ""
 
+        # logs
+        logs_directory = self.logs_directory()
+        Path(logs_directory).mkdir(parents=True, exist_ok=True)
+
+        # init
         if self.checkpoint is None or self.checkpoint.wandb_run_id is None:
             wandb.init(
                 project=f"autometa{project_suffix}",
                 config=self.config.to_dict(),
+                dir=logs_directory,
             )
         else:
             wandb.init(
                 project=f"autometa{project_suffix}",
                 id=self.checkpoint.wandb_run_id,
+                dir=logs_directory,
             )
             pass
 
