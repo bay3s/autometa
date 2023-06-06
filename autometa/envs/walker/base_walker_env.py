@@ -27,7 +27,10 @@ class BaseWalkerEnv(Walker2dEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             np.ndarray
         """
-        return super()._get_obs().flatten()
+        qpos = self.sim.data.qpos
+        qvel = self.sim.data.qvel
+
+        return np.concatenate([qpos[1:], np.clip(qvel, -10, 10)]).ravel()
 
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """
@@ -86,9 +89,10 @@ class BaseWalkerEnv(Walker2dEnv_, BaseRandomizedMujocoEnv, ABC):
             None
         """
         self.viewer.cam.trackbodyid = 2
-        self.viewer.cam.distance = self.model.stat.extent * 0.75
-        self.viewer.cam.lookat[2] += 0.8
+        self.viewer.cam.distance = self.model.stat.extent * 0.5
+        self.viewer.cam.lookat[2] += .8
         self.viewer.cam.elevation = -20
+        pass
 
     def render(self, mode: str = "human"):
         """

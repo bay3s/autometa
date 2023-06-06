@@ -2,15 +2,16 @@ from typing import Tuple, Optional, List
 
 import numpy as np
 from gym.utils import EzPickle, seeding
-import mujoco_py
 
-from autometa.envs.hopper.base_hopper_env import BaseHopperEnv
+from autometa.envs.walker.base_walker_env import BaseWalkerEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
 from autometa.randomization.randomization_bound_type import RandomizationBoundType
 from autometa.randomization.randomization_bound import RandomizationBound
 
 
-class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
+class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
+
+    SCALING_FACTOR = 0.05
 
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
@@ -18,14 +19,14 @@ class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=0,
-                min_value=-0.0,
+                min_value=-SCALING_FACTOR,
                 max_value=0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
                 value=0,
                 min_value=0,
-                max_value=0.0,
+                max_value=SCALING_FACTOR,
             ),
             delta=0.05,
         ),
@@ -34,14 +35,14 @@ class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
             lower_bound = RandomizationBound(
                 type = RandomizationBoundType.LOWER_BOUND,
                 value = 0,
-                min_value = -0.0,
+                min_value = -SCALING_FACTOR,
                 max_value = 0,
             ),
             upper_bound = RandomizationBound(
                 type = RandomizationBoundType.UPPER_BOUND,
                 value = 0,
                 min_value = 0,
-                max_value = 0.0,
+                max_value = SCALING_FACTOR,
             ),
             delta = 0.05,
         ),
@@ -50,14 +51,14 @@ class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=0,
-                min_value=-0.0,
+                min_value=-SCALING_FACTOR,
                 max_value=0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
                 value=0,
                 min_value=0,
-                max_value=0.0,
+                max_value=SCALING_FACTOR,
             ),
             delta=0.05,
         ),
@@ -138,7 +139,7 @@ class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
         Convert a list of parameters to dict.
 
         Args:
-            params (List[RandomizationParameter]): A list of randomized parameters.
+            params (List[RandomizationParameter]): A list of randomzed parameters.
 
         Returns:
             dict
@@ -183,25 +184,25 @@ class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
         """
         self._elapsed_steps += 1
 
-        try:
-            observation, reward, terminated, truncated, info = BaseHopperEnv.step(
-                self, action
-            )
-        except mujoco_py.builder.MujocoException as e:
-            print(self.model.body_mass)
-            print(self.model.dof_damping)
-            print(self.model.geom_friction)
-            print(self.model.body_inertia)
-            print(e)
+        # position
+        position_before = self.sim.data.qpos[0, 0]
+        self.do_simulation(action, self.frame_skip)
+        position_after, height, ang = self.sim.data.qpos[0:3, 0]
 
-            terminated = False
-            reward = 0.0
-            observation = self._get_obs()
-            pass
-
+        # reward
+        alive_bonus = 1.0
+        reward = (position_after - position_before) / self.dt
+        reward += alive_bonus
+        reward -= 1e-3 * np.square(action).sum()
         self._episode_reward += reward
+
+        # done
+        terminated = not (0.8 < height < 2.0 and -1.0 < ang < 1.0)
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
+
+        # observation
+        observation = self._get_obs()
 
         info = {}
         if done:
@@ -318,14 +319,10 @@ class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
         self._elapsed_steps = 0
         self._episode_reward = 0.0
 
-        qpos = self.init_qpos + self.np_random.uniform(
-            low=-0.005, high=0.005, size=self.model.nq
+        self.set_state(
+            self.init_qpos + self.np_random.uniform(low = -.005, high = .005, size = self.model.nq),
+            self.init_qvel + self.np_random.uniform(low = -.005, high = .005, size = self.model.nv)
         )
-        qvel = self.init_qvel + self.np_random.uniform(
-            low=-0.005, high=0.005, size=self.model.nv
-        )
-
-        self.set_state(qpos, qvel)
 
         return self._get_obs(), {}
 
