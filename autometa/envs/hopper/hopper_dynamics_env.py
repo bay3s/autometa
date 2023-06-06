@@ -12,7 +12,7 @@ from autometa.randomization.randomization_bound import RandomizationBound
 
 class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
 
-    SCALING_FACTOR = 0.05
+    SCALING_FACTOR = 1
 
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
