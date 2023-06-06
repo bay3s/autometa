@@ -296,7 +296,7 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         """
         self.model.body_mass[:] = params["body_mass"][:]
         self.model.body_inertia[:] = params["body_inertia"][:]
-        self.model.dof_damping[:] = params["dof_damping"][:]
+        # self.model.dof_damping[:] = params["dof_damping"][:]
         self.model.geom_friction[:] = params["geom_friction"][:]
         pass
 
