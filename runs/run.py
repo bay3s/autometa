@@ -11,17 +11,19 @@ from autometa.utils.env_utils import register_custom_envs
 register_custom_envs()
 
 
-ANT_NAVIGATION = "ant_navigation"
-ANT_VELOCITY = "ant_velocity"
-CHEETAH_VELOCITY = "cheetah_velocity"
-HOPPER_DYNAMICS = "hopper_dynamics"
 POINT_NAVIGATION = "point_navigation"
+ANT_VELOCITY = "ant_velocity"
+ANT_NAVIGATION = "ant_navigation"
+CHEETAH_VELOCITY = "cheetah_velocity"
+WALKER_DYNAMICS = "walker_dynamics"
+HOPPER_DYNAMICS = "hopper_dynamics"
 
 SUPPORTED_ENVIRONMENTS = [
     POINT_NAVIGATION,
     CHEETAH_VELOCITY,
-    ANT_NAVIGATION,
     ANT_VELOCITY,
+    ANT_NAVIGATION,
+    WALKER_DYNAMICS,
     HOPPER_DYNAMICS,
 ]
 

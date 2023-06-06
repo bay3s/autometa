@@ -162,4 +162,9 @@ def register_custom_envs() -> None:
         id="HopperDynamics-v1",
         entry_point="autometa.envs.hopper.hopper_dynamics_env:HopperDynamicsEnv",
     )
+
+    register(
+        id="WalkerDynamics-v1",
+        entry_point="autometa.envs.walker.walker_dynamics_env:WalkerDynamicsEnv",
+    )
     pass
