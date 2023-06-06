@@ -3,12 +3,12 @@ from typing import Tuple, Optional, List
 import math
 import numpy as np
 from gym.utils import EzPickle, seeding
+import mujoco_py
 
 from autometa.envs.walker.base_walker_env import BaseWalkerEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
 from autometa.randomization.randomization_bound_type import RandomizationBoundType
 from autometa.randomization.randomization_bound import RandomizationBound
-
 
 class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
 
@@ -187,7 +187,16 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
 
         # position
         position_before = self.sim.data.qpos[0]
-        self.do_simulation(action, self.frame_skip)
+
+        try:
+            action = np.clip(action, -1.0, 1.0)
+            self.do_simulation(action, self.frame_skip)
+        except mujoco_py.builder.MujocoException as e:
+            print(e)
+            print("action: ", action)
+            self._debug_exception()
+            pass
+
         position_after, height, ang = self.sim.data.qpos[0:3]
 
         # reward
@@ -285,7 +294,7 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
             "geom_friction": self._initial_friction * friction_multiplier
         }
 
-    def _update_sim(self, params: dict) -> None:
+    def _update_sim(self, params: dict, min_param: float = 1e-3, max_param: float = math.inf) -> None:
         """
         Update the simulation dynamics.
 
@@ -295,12 +304,23 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         Returns:
             None
         """
-        eps_min = 1e-4
-        eps_max = math.inf
-        self.model.body_mass[1:] = np.clip(params["body_mass"][1:], a_min = eps_min, a_max = eps_max)
-        # self.model.body_inertia[:] = params["body_inertia"][:] + eps
-        # self.model.dof_damping[:] = params["dof_damping"][:] + eps
-        # self.model.geom_friction[:] = params["geom_friction"][:] + eps
+        self.model.body_mass[1:] = np.clip(params["body_mass"][1:], a_min = min_param, a_max = max_param)
+        self.model.body_inertia[1:][:] = np.clip(params["body_inertia"][1:][:], a_min = min_param, a_max = max_param)
+        self.model.dof_damping[3:] = np.clip(params["dof_damping"][3:], a_min = min_param, a_max = max_param)
+        self.model.geom_friction[:] = np.clip(params["geom_friction"][:], a_min = min_param, a_max = max_param)
+        pass
+
+    def _debug_exception(self) -> None:
+        """
+        Update the simulation dynamics.
+
+        Returns:
+            None
+        """
+        print(self.model.body_mass)
+        print(self.model.body_inertia)
+        print(self.model.dof_damping)
+        print(self.model.geom_friction)
         pass
 
     def reset(
