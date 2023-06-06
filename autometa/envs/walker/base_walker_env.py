@@ -3,12 +3,12 @@ from typing import Tuple, Any
 from abc import ABC
 
 import gym
-from gym.envs.mujoco import HopperEnv as HopperEnv_
+from gym.envs.mujoco import Walker2dEnv as Walker2dEnv_
 
 from autometa.envs.base_randomized_mujoco_env import BaseRandomizedMujocoEnv
 
 
-class BaseHopperEnv(HopperEnv_, BaseRandomizedMujocoEnv, ABC):
+class BaseWalkerEnv(Walker2dEnv_, BaseRandomizedMujocoEnv, ABC):
     def __init__(self, seed: int = None):
         """
         Initialize the Mujoco Ant environment for meta-learning.
@@ -17,7 +17,7 @@ class BaseHopperEnv(HopperEnv_, BaseRandomizedMujocoEnv, ABC):
             seed (int): Random seed.
         """
         BaseRandomizedMujocoEnv.__init__(self, seed)
-        HopperEnv_.__init__(self)
+        Walker2dEnv_.__init__(self)
         pass
 
     def _get_obs(self) -> np.ndarray:
@@ -27,10 +27,7 @@ class BaseHopperEnv(HopperEnv_, BaseRandomizedMujocoEnv, ABC):
         Returns:
             np.ndarray
         """
-        return np.concatenate([
-            self.sim.data.qpos.flat[1:],
-            np.clip(self.sim.data.qvel.flat, -10, 10)
-        ])
+        return super()._get_obs().flatten()
 
     def get_spaces(self) -> Tuple[gym.Space, gym.Space]:
         """

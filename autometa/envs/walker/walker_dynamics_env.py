@@ -10,9 +10,7 @@ from autometa.randomization.randomization_bound_type import RandomizationBoundTy
 from autometa.randomization.randomization_bound import RandomizationBound
 
 
-class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
-
-    SCALING_FACTOR = 0.05
+class WalkerDynamicsEnv(BaseHopperEnv, EzPickle):
 
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
@@ -20,14 +18,14 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=0,
-                min_value=-SCALING_FACTOR,
+                min_value=-0.0,
                 max_value=0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
                 value=0,
                 min_value=0,
-                max_value=SCALING_FACTOR,
+                max_value=0.0,
             ),
             delta=0.05,
         ),
@@ -36,14 +34,14 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             lower_bound = RandomizationBound(
                 type = RandomizationBoundType.LOWER_BOUND,
                 value = 0,
-                min_value = -SCALING_FACTOR,
+                min_value = -0.0,
                 max_value = 0,
             ),
             upper_bound = RandomizationBound(
                 type = RandomizationBoundType.UPPER_BOUND,
                 value = 0,
                 min_value = 0,
-                max_value = SCALING_FACTOR,
+                max_value = 0.0,
             ),
             delta = 0.05,
         ),
@@ -52,14 +50,14 @@ class HopperDynamicsEnv(BaseHopperEnv, EzPickle):
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=0,
-                min_value=-SCALING_FACTOR,
+                min_value=-0.0,
                 max_value=0,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
                 value=0,
                 min_value=0,
-                max_value=SCALING_FACTOR,
+                max_value=0.0,
             ),
             delta=0.05,
         ),
