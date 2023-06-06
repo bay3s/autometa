@@ -185,9 +185,9 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         self._elapsed_steps += 1
 
         # position
-        position_before = self.sim.data.qpos[0, 0]
+        position_before = self.sim.data.qpos[0]
         self.do_simulation(action, self.frame_skip)
-        position_after, height, ang = self.sim.data.qpos[0:3, 0]
+        position_after, height, ang = self.sim.data.qpos[0:3]
 
         # reward
         alive_bonus = 1.0
