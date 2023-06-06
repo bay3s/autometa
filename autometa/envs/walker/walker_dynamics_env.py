@@ -311,9 +311,9 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         Returns:
             None
         """
-        self.model.body_mass[1:] = params["body_mass"][1:]
-        self.model.body_inertia[1:][:] = params["body_inertia"][1:][:]
-        self.model.dof_damping[3:] = params["dof_damping"][3:]
+        self.model.body_mass[:] = params["body_mass"][:]
+        self.model.body_inertia[:][:] = params["body_inertia"][:][:]
+        self.model.dof_damping[:] = params["dof_damping"][:]
         self.model.geom_friction[:] = params["geom_friction"][:]
         pass
 
