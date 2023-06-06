@@ -11,7 +11,7 @@ from autometa.randomization.randomization_bound import RandomizationBound
 
 class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
 
-    SCALING_FACTOR = 2.0
+    SCALING_FACTOR = 3.0
 
     RANDOMIZABLE_PARAMETERS = [
         RandomizationParameter(
