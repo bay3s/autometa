@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=25
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
-#SBATCH --time=24:00:00
+#SBATCH --time=2:00:00
 
 source /home/${USER}/.bashrc
 source activate rl
