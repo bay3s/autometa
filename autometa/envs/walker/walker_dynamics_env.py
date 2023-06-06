@@ -116,7 +116,7 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         self._auto_reset = auto_reset
         self._episode_reward = 0.0
 
-        BaseHopperEnv.__init__(self)
+        BaseWalkerEnv.__init__(self)
         EzPickle.__init__(self)
 
         # initial
