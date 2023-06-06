@@ -294,7 +294,7 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
             "geom_friction": self._initial_friction * friction_multiplier
         }
 
-    def _update_sim(self, params: dict, min_param: float = 1e-3, max_param: float = math.inf) -> None:
+    def _update_sim(self, params: dict, min_param: float = 1e-3) -> None:
         """
         Update the simulation dynamics.
 
@@ -304,10 +304,10 @@ class WalkerDynamicsEnv(BaseWalkerEnv, EzPickle):
         Returns:
             None
         """
-        self.model.body_mass[1:] = np.clip(params["body_mass"][1:], a_min = min_param, a_max = max_param)
-        self.model.body_inertia[1:][:] = np.clip(params["body_inertia"][1:][:], a_min = min_param, a_max = max_param)
-        self.model.dof_damping[3:] = np.clip(params["dof_damping"][3:], a_min = min_param, a_max = max_param)
-        self.model.geom_friction[:] = np.clip(params["geom_friction"][:], a_min = min_param, a_max = max_param)
+        self.model.body_mass[1:] = params["body_mass"][1:]
+        self.model.body_inertia[1:][:] = params["body_inertia"][1:][:]
+        self.model.dof_damping[3:] = params["dof_damping"][3:]
+        self.model.geom_friction[:] = params["geom_friction"][:]
         pass
 
     def _debug_exception(self) -> None:
