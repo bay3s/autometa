@@ -65,14 +65,12 @@ def make_env_thunk(env_name: str, env_configs: dict, seed: int, rank: int) -> Ca
     """
 
     def _thunk():
-        env = gym.make(env_name, **env_configs)
+        env = gym.make(env_name, **env_configs, seed=(seed + rank))
 
         if not callable(getattr(env, "seed", None)):
             raise NotImplementedError(
                 f"`seed` required for experiment replicability, but not implemented."
             )
-
-        env.seed(seed + rank)
 
         if len(env.observation_space.shape) != 1:
             raise NotImplementedError
