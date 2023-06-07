@@ -1,7 +1,7 @@
 from typing import Tuple, Optional, List
 
 import numpy as np
-from gym.utils import EzPickle, seeding
+from gym.utils import EzPickle
 
 from autometa.envs.cheetah.base_cheetah_env import BaseCheetahEnv
 
@@ -190,9 +190,6 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         Returns:
             Tuple
         """
-        if seed is not None:
-            self.np_random, seed = seeding.np_random(seed)
-
         self._elapsed_steps = 0
         self._episode_reward = 0.0
 

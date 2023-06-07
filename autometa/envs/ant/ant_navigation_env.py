@@ -2,7 +2,7 @@ from typing import Tuple, Any, List, Optional
 import numpy as np
 
 import gym
-from gym.utils import EzPickle, seeding
+from gym.utils import EzPickle
 
 from autometa.envs.ant.base_ant_env import BaseAntEnv
 from autometa.randomization.randomization_parameter import RandomizationParameter
@@ -171,9 +171,6 @@ class AntNavigationEnv(BaseAntEnv, EzPickle):
         Returns:
             Tuple
         """
-        if seed is not None:
-            self.np_random, seed = seeding.np_random(seed)
-
         self._elapsed_steps = 0
         self._episode_reward = 0.0
 
