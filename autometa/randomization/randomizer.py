@@ -321,21 +321,24 @@ class Randomizer:
             lower_buffer = self.buffer.get(lower_boundary)
             upper_buffer = self.buffer.get(upper_boundary)
 
-            # upper
-            info[f"randomizer/{param.name}_upper"] = param.upper_bound.value
-            info[f"randomizer/{param.name}_upper_buffer_size"] = len(upper_buffer)
-            info[f"randomizer/rewards/{param.name}_upper_buffer"] = (
+            # bounds
+            info[f"randomizer/bound/{param.name}_upper"] = param.upper_bound.value
+            info[f"randomizer/bound/{param.name}_lower"] = param.lower_bound.value
+
+            # buffer
+            info[f"randomizer/buffer_size/{param.name}_upper"] = len(upper_buffer)
+            info[f"randomizer/buffer_size/{param.name}_lower"] = len(lower_buffer)
+
+            # lower
+            info[f"randomizer/rewards/{param.name}_upper"] = (
                 np.mean(upper_buffer) if len(upper_buffer) else 0.0
             )
-            # lower
-            info[f"randomizer/{param.name}_lower"] = param.lower_bound.value
-            info[f"randomizer/{param.name}_lower_buffer_size"] = len(lower_buffer)
-            info[f"randomizer/rewards/{param.name}_lower_buffer_rewards"] = (
+            info[f"randomizer/rewards/{param.name}_lower"] = (
                 np.mean(lower_buffer) if len(lower_buffer) else 0.0
             )
 
             # range
-            info[f"randomizer/{param.name}_range"] = param.range
+            info[f"randomizer/range/{param.name}"] = param.range
             pass
 
         info["randomizer/entropy"] = self.entropy()
