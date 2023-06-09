@@ -15,7 +15,7 @@ class RLSquaredEnv:
     def __init__(
         self,
         env: Union[BaseRandomizedEnv, BaseRandomizedMujocoEnv],
-        meta_episode_length: int = 200,
+        meta_episode_length: int,
     ):
         """
         Abstract class that outlines functions required by an environment for meta-learning via RL-Squared.

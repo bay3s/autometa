@@ -34,6 +34,7 @@ class BaseTrainer(ABC):
 
         self.vectorized_envs = make_vec_envs(
             self.config.env_id,
+            self.config.meta_episode_length,
             self.config.env_configs,
             self.config.random_seed,
             self.config.num_processes,
