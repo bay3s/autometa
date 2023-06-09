@@ -31,6 +31,7 @@ class AutoDRTrainer(BaseTrainer):
             parallel_envs=self.vectorized_envs,
             evaluation_probability=self.config.adr_evaluation_probability,
             buffer_size=self.config.adr_performance_buffer_size,
+            deltas=self.config.adr_deltas,
             performance_threshold_lower=self.config.adr_performance_threshold_lower,
             performance_threshold_upper=self.config.adr_performance_threshold_upper,
         )

@@ -20,6 +20,7 @@ class Randomizer:
         parallel_envs: PyTorchVecEnvWrapper,
         evaluation_probability: float,
         buffer_size: int,
+        deltas: dict,
         performance_threshold_lower: float,
         performance_threshold_upper: float,
     ) -> None:
@@ -30,6 +31,7 @@ class Randomizer:
             parallel_envs (int): Number of environments being randomized in parallel.
             evaluation_probability (float): Probability of boundary sampling and subsequently increasing the difficulty.
             buffer_size (int): Minimum buffer size required for evaluating boundary sampling performance.
+            deltas (dict): Mapping of individual parameters to their individual deltas.
             performance_threshold_upper (float): Lower threshold for performance on a specific environment, if this is
                 not met then the parameter entropy is decreased.
             performance_threshold_lower (float): Lower threshold for performance on a specific environment, if this is
@@ -41,7 +43,7 @@ class Randomizer:
             "randomizable_parameters", indices=0
         )[0]
 
-        self.randomized_parameters = self._init_params(randomizable_params)
+        self.randomized_parameters = self._init_params(randomizable_params, deltas)
         self.buffer = RandomizationPerformanceBuffer(
             randomizable_params, buffer_size=buffer_size
         )
@@ -56,12 +58,13 @@ class Randomizer:
         pass
 
     @staticmethod
-    def _init_params(params: List[RandomizationParameter]) -> dict:
+    def _init_params(params: List[RandomizationParameter], deltas: dict) -> dict:
         """
         Convert a list of parameters to dict.
 
         Args:
             params (List[RandomizationParameter]): A list of randomized parameters.
+            deltas (dict): Mapping of individual parameters to their individual deltas.
 
         Returns:
             dict
@@ -69,6 +72,7 @@ class Randomizer:
         randomized = dict()
 
         for param in params:
+            param.delta = deltas[param.name]
             randomized[param.name] = param
 
         return randomized
