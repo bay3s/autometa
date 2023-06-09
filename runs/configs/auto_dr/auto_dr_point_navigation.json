@@ -1,5 +1,5 @@
 {
-  "algo": "rl_squared",
+  "algo": "auto_dr",
   "env_id": "PointNavigation-v1",
   "random_seed": 6785,
   "env_configs": {

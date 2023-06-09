@@ -111,7 +111,6 @@ class RLSquaredTrainer(BaseTrainer):
                 "meta_train/clip_fraction": ppo_update.clip_fraction,
                 "meta_train/explained_variance": ppo_update.explained_variance,
                 "meta_train/mean_meta_episode_reward": np.mean(meta_episode_rewards)
-                * self.config.meta_episode_length,
             }
 
             # checkpoint
