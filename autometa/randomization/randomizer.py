@@ -20,7 +20,7 @@ class Randomizer:
         parallel_envs: PyTorchVecEnvWrapper,
         evaluation_probability: float,
         buffer_size: int,
-        delta: float,
+        deltas: dict,
         performance_threshold_lower: float,
         performance_threshold_upper: float,
     ) -> None:
@@ -31,7 +31,7 @@ class Randomizer:
             parallel_envs (int): Number of environments being randomized in parallel.
             evaluation_probability (float): Probability of boundary sampling and subsequently increasing the difficulty.
             buffer_size (int): Minimum buffer size required for evaluating boundary sampling performance.
-            delta (float): Delta parameter by which to increment or decrement parameter bounds.
+            deltas (dict): Mapping of individual parameters to their individual deltas.
             performance_threshold_upper (float): Lower threshold for performance on a specific environment, if this is
                 not met then the parameter entropy is decreased.
             performance_threshold_lower (float): Lower threshold for performance on a specific environment, if this is
@@ -43,15 +43,13 @@ class Randomizer:
             "randomizable_parameters", indices=0
         )[0]
 
-        self.randomized_parameters = self._init_params(randomizable_params)
+        self.randomized_parameters = self._init_params(randomizable_params, deltas)
         self.buffer = RandomizationPerformanceBuffer(
             randomizable_params, buffer_size=buffer_size
         )
 
         self.evaluation_probability = evaluation_probability
         self.buffer_size = buffer_size
-        self.delta = delta
-
         self.sampled_boundaries = [None] * parallel_envs.num_envs
 
         # performance
@@ -60,12 +58,13 @@ class Randomizer:
         pass
 
     @staticmethod
-    def _init_params(params: List[RandomizationParameter]) -> dict:
+    def _init_params(params: List[RandomizationParameter], deltas: dict) -> dict:
         """
         Convert a list of parameters to dict.
 
         Args:
             params (List[RandomizationParameter]): A list of randomized parameters.
+            deltas (dict): Mapping of individual parameters to their individual deltas.
 
         Returns:
             dict
@@ -73,6 +72,7 @@ class Randomizer:
         randomized = dict()
 
         for param in params:
+            param.delta = deltas[param.name]
             randomized[param.name] = param
 
         return randomized
@@ -94,7 +94,7 @@ class Randomizer:
 
         return np.log(ranges).mean()
 
-    def re_evaluate(self, sampled_boundary: RandomizationBoundary) -> None:
+    def _re_evaluate_boundary(self, sampled_boundary: RandomizationBoundary) -> None:
         """
         Update ADR bounds based on the performance for a given boundary.
 
@@ -130,6 +130,21 @@ class Randomizer:
                 self.randomized_parameters[param.name].increase_lower_bound()
             else:
                 raise ValueError
+
+    def re_evaluate(self) -> None:
+        """
+        Update ADR bounds based on the performance.
+
+        Returns:
+            None
+        """
+        for boundary in self.sampled_boundaries:
+            if boundary is None:
+                continue
+
+            # evaluate
+            self._re_evaluate_boundary(boundary)
+            pass
 
     def _get_task(self) -> Tuple:
         """
@@ -239,17 +254,8 @@ class Randomizer:
             if not done:
                 continue
 
-            # @todo re-evaluate all boundaries at the end of a meta-episode.
-            if boundary is not None:
-                self.update_buffer(boundary, info["episode"]["r"])
-                self.re_evaluate(boundary)
-
-            # sample
-            randomized_params, boundary = self._get_task()
-            self.sampled_boundaries[env_idx] = boundary
-            self.parallel_envs.env_method(
-                "sample_task", randomized_params, indices=env_idx
-            )
+            if boundary is not None and "meta_episode" in info.keys():
+                self.update_buffer(boundary, info["meta_episode"]["r"])
 
     @property
     def observation_space(self) -> gym.Space:
@@ -315,21 +321,24 @@ class Randomizer:
             lower_buffer = self.buffer.get(lower_boundary)
             upper_buffer = self.buffer.get(upper_boundary)
 
-            # upper
-            info[f"randomizer/{param.name}_upper"] = param.upper_bound.value
-            info[f"randomizer/{param.name}_upper_buffer_size"] = len(upper_buffer)
-            info[f"randomizer/rewards/{param.name}_upper_buffer"] = (
+            # bounds
+            info[f"randomizer/bound/{param.name}_upper"] = param.upper_bound.value
+            info[f"randomizer/bound/{param.name}_lower"] = param.lower_bound.value
+
+            # buffer
+            info[f"randomizer/buffer_size/{param.name}_upper"] = len(upper_buffer)
+            info[f"randomizer/buffer_size/{param.name}_lower"] = len(lower_buffer)
+
+            # lower
+            info[f"randomizer/rewards/{param.name}_upper"] = (
                 np.mean(upper_buffer) if len(upper_buffer) else 0.0
             )
-            # lower
-            info[f"randomizer/{param.name}_lower"] = param.lower_bound.value
-            info[f"randomizer/{param.name}_lower_buffer_size"] = len(lower_buffer)
-            info[f"randomizer/rewards/{param.name}_lower_buffer_rewards"] = (
+            info[f"randomizer/rewards/{param.name}_lower"] = (
                 np.mean(lower_buffer) if len(lower_buffer) else 0.0
             )
 
             # range
-            info[f"randomizer/{param.name}_range"] = param.range
+            info[f"randomizer/range/{param.name}"] = param.range
             pass
 
         info["randomizer/entropy"] = self.entropy()

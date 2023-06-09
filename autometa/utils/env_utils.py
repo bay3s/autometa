@@ -50,12 +50,13 @@ def get_render_func(venv: gym.Env):
     return None
 
 
-def make_env_thunk(env_name: str, env_configs: dict, seed: int, rank: int) -> Callable:
+def make_env_thunk(env_name: str, meta_episode_length: int, env_configs: dict, seed: int, rank: int) -> Callable:
     """
     Returns a callable to create environments based on the specs provided.
 
     Args:
         env_name (str): Environment to create.
+        meta_episode_length (int): Length of a single meta-episode.
         env_configs (dict): Key word arguments for making the environment.
         seed (int): Random seed for the experiments.
         rank (int): "Rank" of the environment that the callable would return.
@@ -75,7 +76,7 @@ def make_env_thunk(env_name: str, env_configs: dict, seed: int, rank: int) -> Ca
         if len(env.observation_space.shape) != 1:
             raise NotImplementedError
 
-        env = RLSquaredEnv(env)
+        env = RLSquaredEnv(env, meta_episode_length)
 
         obs_shape = env.observation_space.shape
         if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
@@ -88,6 +89,7 @@ def make_env_thunk(env_name: str, env_configs: dict, seed: int, rank: int) -> Ca
 
 def make_vec_envs(
     env_name: str,
+    meta_episode_length: int,
     env_kwargs: dict,
     seed: int,
     num_processes: int,
@@ -101,6 +103,7 @@ def make_vec_envs(
 
     Args:
         env_name (str): Name of the environment to be created.
+        meta_episode_length (int): Length of the sampled meta-episode.
         env_kwargs (dict): Key word arguments to create the environment.
         seed (int): Random seed for environments.
         num_processes (int): Number of parallel processes to be used for simulations.
@@ -113,7 +116,7 @@ def make_vec_envs(
         PyTorchVecEnvWrapper
     """
     envs = [
-        make_env_thunk(env_name, env_kwargs, seed, rank)
+        make_env_thunk(env_name, meta_episode_length, env_kwargs, seed, rank)
         for rank in range(num_processes)
     ]
 
