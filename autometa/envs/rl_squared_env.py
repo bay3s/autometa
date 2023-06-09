@@ -90,6 +90,7 @@ class RLSquaredEnv:
         # reset meta
         if self._meta_episode_steps >= self._meta_episode_length:
             self._meta_episode_steps = 0
+            self._meta_episode_rewards = 0.0
 
         return next_obs
 

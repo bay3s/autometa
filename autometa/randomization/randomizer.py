@@ -134,11 +134,13 @@ class Randomizer:
         Returns:
             None
         """
-        map(
-            self._re_evaluate_boundary,
-            [boundary for boundary in self.sampled_boundaries if boundary is not None],
-        )
-        pass
+        for boundary in self.sampled_boundaries:
+            if boundary is None:
+                continue
+
+            # evaluate
+            self._re_evaluate_boundary(boundary)
+            pass
 
     def _get_task(self) -> Tuple:
         """
