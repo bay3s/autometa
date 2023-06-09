@@ -20,7 +20,6 @@ class Randomizer:
         parallel_envs: PyTorchVecEnvWrapper,
         evaluation_probability: float,
         buffer_size: int,
-        delta: float,
         performance_threshold_lower: float,
         performance_threshold_upper: float,
     ) -> None:
@@ -31,7 +30,6 @@ class Randomizer:
             parallel_envs (int): Number of environments being randomized in parallel.
             evaluation_probability (float): Probability of boundary sampling and subsequently increasing the difficulty.
             buffer_size (int): Minimum buffer size required for evaluating boundary sampling performance.
-            delta (float): Delta parameter by which to increment or decrement parameter bounds.
             performance_threshold_upper (float): Lower threshold for performance on a specific environment, if this is
                 not met then the parameter entropy is decreased.
             performance_threshold_lower (float): Lower threshold for performance on a specific environment, if this is
@@ -50,8 +48,6 @@ class Randomizer:
 
         self.evaluation_probability = evaluation_probability
         self.buffer_size = buffer_size
-        self.delta = delta
-
         self.sampled_boundaries = [None] * parallel_envs.num_envs
 
         # performance
@@ -94,7 +90,7 @@ class Randomizer:
 
         return np.log(ranges).mean()
 
-    def re_evaluate(self, sampled_boundary: RandomizationBoundary) -> None:
+    def _re_evaluate_boundary(self, sampled_boundary: RandomizationBoundary) -> None:
         """
         Update ADR bounds based on the performance for a given boundary.
 
@@ -130,6 +126,19 @@ class Randomizer:
                 self.randomized_parameters[param.name].increase_lower_bound()
             else:
                 raise ValueError
+
+    def re_evaluate(self) -> None:
+        """
+        Update ADR bounds based on the performance.
+
+        Returns:
+            None
+        """
+        map(
+            self._re_evaluate_boundary,
+            [boundary for boundary in self.sampled_boundaries if boundary is not None],
+        )
+        pass
 
     def _get_task(self) -> Tuple:
         """
@@ -239,17 +248,8 @@ class Randomizer:
             if not done:
                 continue
 
-            # @todo re-evaluate all boundaries at the end of a meta-episode.
             if boundary is not None:
-                self.update_buffer(boundary, info["episode"]["r"])
-                self.re_evaluate(boundary)
-
-            # sample
-            randomized_params, boundary = self._get_task()
-            self.sampled_boundaries[env_idx] = boundary
-            self.parallel_envs.env_method(
-                "sample_task", randomized_params, indices=env_idx
-            )
+                self.update_buffer(boundary, info["meta_episode"]["r"])
 
     @property
     def observation_space(self) -> gym.Space:

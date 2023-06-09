@@ -12,20 +12,29 @@ from autometa.randomization.randomization_parameter import RandomizationParamete
 
 
 class RLSquaredEnv:
-    def __init__(self, env: Union[BaseRandomizedEnv, BaseRandomizedMujocoEnv]):
+    def __init__(
+        self,
+        env: Union[BaseRandomizedEnv, BaseRandomizedMujocoEnv],
+        meta_episode_length: int = 200,
+    ):
         """
         Abstract class that outlines functions required by an environment for meta-learning via RL-Squared.
 
         Args:
             env (gym.Env): Environment for general meta-learning around which to add an RL-Squared wrapper.
+            meta_episode_length (int): Length of a single meta-episode.
         """
         self._wrapped_env = env
 
         self._action_space = self._wrapped_env.action_space
         self._observation_space = self._make_observation_space()
 
+        # meta-episode
+        self._meta_episode_steps = 0.0
+        self._meta_episode_length = meta_episode_length
+        self._meta_episode_rewards = 0.0
+
         # pass these onwards
-        self._episode_rewards = 0.0
         self._prev_action = None
         self._prev_reward = None
         self._prev_done = None
@@ -78,6 +87,10 @@ class RLSquaredEnv:
         else:
             next_obs = self._next_observation(obs, None, 0.0, False)
 
+        # reset meta
+        if self._meta_episode_steps >= self._meta_episode_length:
+            self._meta_episode_steps = 0
+
         return next_obs
 
     def step(self, action: Union[int, np.ndarray]) -> Tuple:
@@ -90,21 +103,28 @@ class RLSquaredEnv:
         Returns:
           Tuple
         """
-        obs, rew, terminated, truncated, info = self._wrapped_env.step(action)
+        obs, reward, terminated, truncated, info = self._wrapped_env.step(action)
         done = truncated or terminated
 
         self._prev_action = action
-        self._prev_reward = rew
+        self._prev_reward = reward
         self._prev_done = done
 
         next_obs = self._next_observation(
             obs, self._prev_action, self._prev_reward, self._prev_done
         )
 
-        return next_obs, rew, done, info
+        self._meta_episode_steps += 1
+        self._meta_episode_rewards += reward
+
+        if self._meta_episode_steps >= self._meta_episode_length:
+            info["meta_episode"] = dict()
+            info["meta_episode"]["r"] = self._meta_episode_rewards
+
+        return next_obs, reward, done, info
 
     def _next_observation(
-        self, obs: np.ndarray, action: Union[int, np.ndarray], rew: float, done: bool
+        self, obs: np.ndarray, action: Union[int, np.ndarray], reward: float, done: bool
     ) -> np.ndarray:
         """
         Given an observation, action, reward, and whether an episode is done - return the formatted observation.
@@ -112,7 +132,7 @@ class RLSquaredEnv:
         Args:
             obs (np.ndarray): Observation made.
             action (Union[int, np.ndarray]): Action taken in the state.
-            rew (float): Reward received.
+            reward (float): Reward received.
             done (bool): Whether this is the terminal observation.
 
         Returns:
@@ -120,11 +140,11 @@ class RLSquaredEnv:
         """
         if self._wrapped_env.action_space.__class__.__name__ == "Discrete":
             obs = np.concatenate(
-                [obs, self._one_hot_action(action), [rew], [float(done)]]
+                [obs, self._one_hot_action(action), [reward], [float(done)]]
             )
         else:
             obs = np.concatenate(
-                [obs, self._flatten_action(action), [rew], [float(done)]]
+                [obs, self._flatten_action(action), [reward], [float(done)]]
             )
 
         return obs

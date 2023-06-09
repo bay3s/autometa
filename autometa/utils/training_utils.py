@@ -46,8 +46,7 @@ def sample_auto_dr(
     num_parallel_envs = randomizer.num_envs
 
     meta_episode_batch = list()
-    episode_rewards = list()
-    total_env_steps = 0
+    meta_episode_rewards = list()
 
     for _ in range(num_meta_episodes // num_parallel_envs):
         meta_episodes = MetaEpisodeBatch(
@@ -58,7 +57,9 @@ def sample_auto_dr(
             recurrent_state_size,
         )
 
+        randomizer.re_evaluate()
         randomizer.randomize_all()
+
         initial_observations = randomizer.parallel_envs.reset()
         meta_episodes.obs[0].copy_(initial_observations)
 
@@ -79,8 +80,8 @@ def sample_auto_dr(
 
             # rewards
             for info in infos:
-                if "episode" in info.keys():
-                    episode_rewards.append(info["episode"]["r"])
+                if "meta_episode" in info.keys():
+                    meta_episode_rewards.append(info["meta_episode"]["r"])
 
             done_masks = torch.FloatTensor(
                 [[0.0] if _done else [1.0] for _done in dones]
@@ -97,9 +98,6 @@ def sample_auto_dr(
                 rewards,
                 done_masks,
             )
-
-            # num steps
-            total_env_steps += num_parallel_envs
             pass
 
         next_value_pred, _ = actor_critic.get_value(
@@ -116,9 +114,7 @@ def sample_auto_dr(
         meta_episode_batch.append(meta_episodes)
         pass
 
-    mean_reward_per_step = np.sum(episode_rewards) / total_env_steps
-
-    return meta_episode_batch, mean_reward_per_step
+    return meta_episode_batch, meta_episode_rewards
 
 
 @torch.no_grad()
@@ -157,7 +153,7 @@ def sample_rl_squared(
     num_parallel_envs = rl_squared_envs.num_envs
 
     meta_episode_batch = list()
-    episode_rewards = list()
+    meta_episode_rewards = list()
     total_env_steps = 0
 
     for _ in range(num_meta_episodes // num_parallel_envs):
@@ -190,8 +186,8 @@ def sample_rl_squared(
 
             # rewards
             for info in infos:
-                if "episode" in info.keys():
-                    episode_rewards.append(info["episode"]["r"])
+                if "meta_episode" in info.keys():
+                    meta_episode_rewards.append(info["meta_episode"]["r"])
 
             done_masks = torch.FloatTensor(
                 [[0.0] if _done else [1.0] for _done in dones]
@@ -227,9 +223,7 @@ def sample_rl_squared(
         meta_episode_batch.append(meta_episodes)
         pass
 
-    mean_reward_per_step = np.sum(episode_rewards) / total_env_steps
-
-    return meta_episode_batch, mean_reward_per_step
+    return meta_episode_batch, meta_episode_rewards
 
 
 def timestamp() -> int:

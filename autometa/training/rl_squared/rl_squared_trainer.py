@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import wandb
 
@@ -88,7 +89,7 @@ class RLSquaredTrainer(BaseTrainer):
                 pass
 
             # sample
-            meta_episode_batches, meta_train_reward_per_step = sample_rl_squared(
+            meta_episode_batches, meta_episode_rewards = sample_rl_squared(
                 self.actor_critic,
                 self.vectorized_envs,
                 self.config.meta_episode_length,
@@ -109,7 +110,7 @@ class RLSquaredTrainer(BaseTrainer):
                 "meta_train/approx_kl": ppo_update.approx_kl,
                 "meta_train/clip_fraction": ppo_update.clip_fraction,
                 "meta_train/explained_variance": ppo_update.explained_variance,
-                "meta_train/mean_meta_episode_reward": meta_train_reward_per_step
+                "meta_train/mean_meta_episode_reward": np.mean(meta_episode_rewards)
                 * self.config.meta_episode_length,
             }
 

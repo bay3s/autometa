@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import wandb
 
@@ -32,7 +33,6 @@ class AutoDRTrainer(BaseTrainer):
             buffer_size=self.config.adr_performance_buffer_size,
             performance_threshold_lower=self.config.adr_performance_threshold_lower,
             performance_threshold_upper=self.config.adr_performance_threshold_upper,
-            delta=self.config.adr_delta,
         )
         pass
 
@@ -102,7 +102,7 @@ class AutoDRTrainer(BaseTrainer):
                 pass
 
             # sample
-            meta_episode_batches, meta_train_reward_per_step = sample_auto_dr(
+            meta_episode_batches, meta_episode_rewards = sample_auto_dr(
                 self.randomizer,
                 self.actor_critic,
                 self.config.meta_episode_length,
@@ -123,7 +123,7 @@ class AutoDRTrainer(BaseTrainer):
                 "meta_train/approx_kl": ppo_update.approx_kl,
                 "meta_train/clip_fraction": ppo_update.clip_fraction,
                 "meta_train/explained_variance": ppo_update.explained_variance,
-                "meta_train/mean_meta_episode_reward": meta_train_reward_per_step
+                "meta_train/mean_meta_episode_reward": np.mean(meta_episode_rewards)
                 * self.config.meta_episode_length,
             }
 
