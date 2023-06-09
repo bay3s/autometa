@@ -248,7 +248,7 @@ class Randomizer:
             if not done:
                 continue
 
-            if boundary is not None:
+            if boundary is not None and "meta_episode" in info.keys():
                 self.update_buffer(boundary, info["meta_episode"]["r"])
 
     @property
