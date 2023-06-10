@@ -5,9 +5,9 @@
 #SBATCH --cpus-per-task=25
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
-#SBATCH --time=10:00:00
+#SBATCH --time=04:00:00
 
 source /home/${USER}/.bashrc
 source activate rl
 
-srun python3 $HOME/autometa/runs/run.py --algo=auto_dr --env=hopper_dynamics --prod
+srun python3 $HOME/autometa/runs/run.py --algo=auto_dr --env=cheetah_velocity --prod
