@@ -19,7 +19,7 @@ class PointNavigationEnv(EzPickle, BaseRandomizedEnv):
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=-0.03,
                 min_value=-3.0,
-                max_value=0.03,
+                max_value=-0.03,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
@@ -27,13 +27,13 @@ class PointNavigationEnv(EzPickle, BaseRandomizedEnv):
                 min_value=0.03,
                 max_value=3.0,
             ),
-            delta=0.05,
+            delta=0.03,
         ),
         RandomizationParameter(
             name="y_position",
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
-                value=0.03,
+                value=-0.03,
                 min_value=-3.0,
                 max_value=-0.03,
             ),
