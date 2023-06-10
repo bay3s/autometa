@@ -53,7 +53,7 @@ class BaseTrainer(ABC):
             self.config.env_id,
             self.config.meta_episode_length,
             self.config.env_configs,
-            self.EVALUTION_RANDOM_SEED,
+            self.EVALUATION_RANDOM_SEED,
             self.config.num_processes,
             self.device,
             self.config.discount_gamma,
