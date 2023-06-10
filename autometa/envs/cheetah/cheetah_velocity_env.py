@@ -27,7 +27,7 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
                 min_value=0.0,
                 max_value=3.0,
             ),
-            delta=0.05,
+            delta=0.03,
         ),
     ]
 

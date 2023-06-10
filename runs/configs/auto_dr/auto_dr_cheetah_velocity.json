@@ -1,6 +1,6 @@
 {
   "algo": "auto_dr",
-  "env_id": "PointNavigation-v1",
+  "env_id": "CheetahVelocity-v1",
   "random_seed": 6785,
   "env_configs": {
     "episode_length": 200
@@ -27,11 +27,10 @@
   "norm_observations": true,
   "norm_rewards": true,
   "adr_evaluation_probability": 0.5,
-  "adr_performance_buffer_size": 50,
+  "adr_performance_buffer_size": 200,
   "adr_performance_threshold_lower": -250,
   "adr_performance_threshold_upper": -100,
   "adr_deltas": {
-    "x_position": 0.03,
-    "y_position": 0.03
+    "target_velocity": 0.03
   }
 }

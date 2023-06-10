@@ -1,7 +1,6 @@
 from typing import List, Tuple
 from datetime import datetime
 
-import numpy as np
 import torch
 
 from autometa.envs.pytorch_vec_env_wrapper import PyTorchVecEnvWrapper

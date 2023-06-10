@@ -14,7 +14,7 @@ class RandomizationParameter:
     name: str
     lower_bound: RandomizationBound
     upper_bound: RandomizationBound
-    delta: float
+    delta: float = None
 
     def __post_init__(self):
         """
@@ -45,6 +45,16 @@ class RandomizationParameter:
         """
         return np.random.uniform(self.lower_bound.value, self.upper_bound.value)
 
+    def _check_delta(self):
+        """
+        Check whether the delta value has been set.
+
+        Returns:
+
+        """
+        if self.delta is None:
+            raise ValueError("`delta` required for changing parameter bounds in `RandomizaitonParameter`.")
+
     def increase_upper_bound(self) -> None:
         """
         Increase the current upper bound for the randomized parameter.
@@ -52,7 +62,9 @@ class RandomizationParameter:
         Returns:
           None
         """
+        self._check_delta()
         self.upper_bound.increase(self.delta)
+        pass
 
     def decrease_upper_bound(self) -> None:
         """
@@ -61,7 +73,9 @@ class RandomizationParameter:
         Returns:
           None
         """
+        self._check_delta()
         self.upper_bound.decrease(self.delta)
+        pass
 
     def decrease_lower_bound(self) -> None:
         """
@@ -70,7 +84,9 @@ class RandomizationParameter:
         Returns:
           None
         """
+        self._check_delta()
         self.lower_bound.decrease(self.delta)
+        pass
 
     def increase_lower_bound(self) -> None:
         """
@@ -79,7 +95,9 @@ class RandomizationParameter:
         Returns:
           None
         """
+        self._check_delta()
         self.lower_bound.increase(self.delta)
+        pass
 
     @property
     def frozen(self) -> bool:
