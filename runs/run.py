@@ -121,5 +121,7 @@ if __name__ == "__main__":
         is_dev=not args.prod,
         checkpoint_interval=args.checkpoint_interval,
         checkpoint_all=args.checkpoint_all,
+        evaluation_interval = 10,
+        evaluation_meta_episodes = 10,
     )
     pass
