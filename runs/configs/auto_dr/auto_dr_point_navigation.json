@@ -12,7 +12,7 @@
   "max_grad_norm": 0.5,
   "cuda_deterministic": false,
   "use_cuda": true,
-  "policy_iterations": 1000,
+  "policy_iterations": 500,
   "meta_episode_length": 400,
   "meta_episodes_per_epoch": 125,
   "num_processes": 25,
@@ -27,11 +27,11 @@
   "norm_observations": true,
   "norm_rewards": true,
   "adr_evaluation_probability": 0.5,
-  "adr_performance_buffer_size": 25,
+  "adr_performance_buffer_size": 30,
   "adr_performance_threshold_lower": -250,
   "adr_performance_threshold_upper": -125,
   "adr_deltas": {
-    "x_position": 0.01,
-    "y_position": 0.01
+    "x_position": 0.015,
+    "y_position": 0.015
   }
 }
