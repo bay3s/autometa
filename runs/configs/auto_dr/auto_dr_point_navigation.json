@@ -25,7 +25,7 @@
   "use_gae": true,
   "gae_lambda": 0.90,
   "norm_observations": false,
-  "norm_rewards": false,
+  "norm_rewards": true,
   "adr_evaluation_probability": 0.5,
   "adr_performance_buffer_size": 25,
   "adr_performance_threshold_lower": -250,
