@@ -24,6 +24,6 @@
   "ppo_value_loss_coef": 0.5,
   "use_gae": true,
   "gae_lambda": 0.90,
-  "norm_observations": true,
-  "norm_rewards": true
+  "norm_observations": false,
+  "norm_rewards": false
 }
