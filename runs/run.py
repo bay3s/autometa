@@ -18,6 +18,11 @@ CHEETAH_VELOCITY = "cheetah_velocity"
 WALKER_DYNAMICS = "walker_dynamics"
 HOPPER_DYNAMICS = "hopper_dynamics"
 
+# bandits
+BERNOULLI_BANDIT_K_5 = "bernoulli_bandit_k_5"
+BERNOULLI_BANDIT_K_10 = "bernoulli_bandit_k_10"
+BERNOULLI_BANDIT_K_50 = "bernoulli_bandit_k_50"
+
 SUPPORTED_ENVIRONMENTS = [
     POINT_NAVIGATION,
     CHEETAH_VELOCITY,
@@ -25,6 +30,9 @@ SUPPORTED_ENVIRONMENTS = [
     ANT_NAVIGATION,
     WALKER_DYNAMICS,
     HOPPER_DYNAMICS,
+    BERNOULLI_BANDIT_K_5,
+    BERNOULLI_BANDIT_K_10,
+    BERNOULLI_BANDIT_K_50
 ]
 
 RL_SQUARED = "rl_squared"
