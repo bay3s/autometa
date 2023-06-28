@@ -18,6 +18,11 @@ CHEETAH_VELOCITY = "cheetah_velocity"
 WALKER_DYNAMICS = "walker_dynamics"
 HOPPER_DYNAMICS = "hopper_dynamics"
 
+# bandits
+BERNOULLI_BANDIT_K_5 = "bernoulli_bandit_k_5"
+BERNOULLI_BANDIT_K_10 = "bernoulli_bandit_k_10"
+BERNOULLI_BANDIT_K_50 = "bernoulli_bandit_k_50"
+
 SUPPORTED_ENVIRONMENTS = [
     POINT_NAVIGATION,
     CHEETAH_VELOCITY,
@@ -25,6 +30,15 @@ SUPPORTED_ENVIRONMENTS = [
     ANT_NAVIGATION,
     WALKER_DYNAMICS,
     HOPPER_DYNAMICS,
+    BERNOULLI_BANDIT_K_5,
+    BERNOULLI_BANDIT_K_10,
+    BERNOULLI_BANDIT_K_50
+]
+
+BANDIT_ENVIRONMENTS = [
+    BERNOULLI_BANDIT_K_5,
+    BERNOULLI_BANDIT_K_10,
+    BERNOULLI_BANDIT_K_50
 ]
 
 RL_SQUARED = "rl_squared"
@@ -104,6 +118,11 @@ if __name__ == "__main__":
     if args.algo is None or args.algo not in SUPPORTED_ALGOS:
         raise ValueError(
             f"Unable to infer algorithm from the inputs, either `rl_squared` or `auto-dr`"
+        )
+
+    if args.algo != RL_SQUARED and args.env in BANDIT_ENVIRONMENTS:
+        raise ValueError(
+            f"Bandit environments can only be run with `rl_squared`, but `auto-dr` found"
         )
 
     # config
