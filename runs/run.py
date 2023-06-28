@@ -35,6 +35,12 @@ SUPPORTED_ENVIRONMENTS = [
     BERNOULLI_BANDIT_K_50
 ]
 
+BANDIT_ENVIRONMENTS = [
+    BERNOULLI_BANDIT_K_5,
+    BERNOULLI_BANDIT_K_10,
+    BERNOULLI_BANDIT_K_50
+]
+
 RL_SQUARED = "rl_squared"
 AUTO_DR = "auto_dr"
 
@@ -112,6 +118,11 @@ if __name__ == "__main__":
     if args.algo is None or args.algo not in SUPPORTED_ALGOS:
         raise ValueError(
             f"Unable to infer algorithm from the inputs, either `rl_squared` or `auto-dr`"
+        )
+
+    if args.algo is not RL_SQUARED and args.env in BANDIT_ENVIRONMENTS:
+        raise ValueError(
+            f"Bandit environments can only be run with `rl_squared`, but `auto-dr` found"
         )
 
     # config
