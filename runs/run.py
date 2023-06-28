@@ -120,7 +120,7 @@ if __name__ == "__main__":
             f"Unable to infer algorithm from the inputs, either `rl_squared` or `auto-dr`"
         )
 
-    if args.algo is not RL_SQUARED and args.env in BANDIT_ENVIRONMENTS:
+    if args.algo != RL_SQUARED and args.env in BANDIT_ENVIRONMENTS:
         raise ValueError(
             f"Bandit environments can only be run with `rl_squared`, but `auto-dr` found"
         )
