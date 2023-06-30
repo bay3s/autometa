@@ -2,13 +2,14 @@ import argparse
 import os
 import torch
 
-from autometa.training.base_config import BaseConfig
+from autometa.training.base_training_config import BaseTrainingConfig
 
 from autometa.utils.env_utils import (
     make_vec_envs,
     register_custom_envs,
     get_vec_normalize,
 )
+
 from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 
 register_custom_envs()
@@ -57,7 +58,7 @@ if __name__ == "__main__":
 
     # config
     config_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.run}/config.json"
-    configs = BaseConfig.from_json(config_path)
+    configs = BaseTrainingConfig.from_json(config_path)
 
     # checkpoint
     checkpoint_path = f"{MODEL_DIRECTORY}/{env_folder}/{args.run}/model.pt"
@@ -65,14 +66,15 @@ if __name__ == "__main__":
     configs.env_configs["episode_length"] = args.length
 
     vectorized_envs = make_vec_envs(
-        configs.env_name,
-        configs.env_configs,
-        args.seed,
-        1,
-        torch.device("cpu"),
-        configs.discount_gamma,
-        configs.norm_observations,
-        configs.norm_rewards,
+        env_name=configs.env_name,
+        meta_episode_length = configs.meta_episode_length,
+        env_kwargs=configs.env_configs,
+        seed = args.seed,
+        num_processes = 1,
+        device = torch.device("cpu"),
+        gamma = configs.discount_gamma,
+        norm_observations = configs.norm_observations,
+        norm_rewards = configs.norm_rewards,
     )
 
     vec_norm = get_vec_normalize(vectorized_envs)

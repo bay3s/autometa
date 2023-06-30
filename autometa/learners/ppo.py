@@ -174,6 +174,7 @@ class PPO:
                 nn.utils.clip_grad_norm_(
                     self.actor_critic.actor.parameters(), self.max_grad_norm
                 )
+
                 nn.utils.clip_grad_norm_(
                     self.actor_critic.critic.parameters(), self.max_grad_norm
                 )
