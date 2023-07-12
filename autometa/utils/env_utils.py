@@ -140,11 +140,6 @@ def register_custom_envs() -> None:
         None
     """
     register(
-        id = "BernoulliBandit-v1",
-        entry_point = "autometa.envs.bandits.bernoulli_bandit_env:BernoulliBanditEnv",
-    )
-
-    register(
         id="PointNavigation-v1",
         entry_point="autometa.envs.point_mass.point_navigation_env:PointNavigationEnv",
     )
