@@ -39,14 +39,14 @@ if __name__ == "__main__":
         8591,
         4030
     ]
+
     NUM_META_EPISODES_PER_SEED = int(NUM_META_EPISODES // len(RANDOM_SEEDS))
+    TORCH_DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    use_cuda = torch.cuda.is_available()
-    TORCH_DEVICE = torch.device("cuda:0" if use_cuda else "cpu")
-
-    if use_cuda:
+    if torch.cuda.is_available():
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
+        pass
 
     parser = argparse.ArgumentParser(
         description="Collect data for evaluation in the point navigation environment."
