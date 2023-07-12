@@ -189,7 +189,9 @@ class AntVelocityEnv(BaseAntEnv, EzPickle):
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 
-        info = {}
+        info = dict()
+        info["sampled_task"] = self._target_velocity
+
         if done:
             info["episode"] = {}
             info["episode"]["r"] = self._episode_reward
