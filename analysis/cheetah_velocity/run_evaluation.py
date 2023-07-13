@@ -26,22 +26,12 @@ if __name__ == "__main__":
 
     EVAL_DIRECTORY = os.path.dirname(__file__)
     MODELS_DIRECTORY = f"{EVAL_DIRECTORY}/models/"
-    DATA_DIRECTORY = f'{EVAL_DIRECTORY}/data/'
+    DATA_DIRECTORY = f"{EVAL_DIRECTORY}/data/"
 
-    MIN_VELOCITY = 0.05
     SUPPORTED_ALGOS = [RL_SQUARED, AUTO_DR]
-    NUM_META_EPISODES = 5_000_000
-    NUM_PROCESSES = 25
+    NUM_META_EPISODES = 100
+    NUM_PROCESSES = 5
     RECURRENT_STATE_SIZE = 256
-    RANDOM_SEEDS = [
-        2878,
-        7922,
-        2725,
-        8591,
-        4030
-    ]
-
-    NUM_META_EPISODES_PER_SEED = int(NUM_META_EPISODES // len(RANDOM_SEEDS))
     TORCH_DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     if torch.cuda.is_available():
@@ -62,11 +52,20 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--max-velocity",
-        help = "Maximum velocity for the sampling range.",
+        help = "Size of the grid to be used for evaluation.",
         type = float
     )
 
+    parser.add_argument(
+        "--random-seed",
+        help = "Size of the grid to be used for evaluation.",
+        type = int
+    )
+
     args = parser.parse_args()
+
+    # torch seed
+    torch.manual_seed(args.random_seed)
 
     # config
     config_path = f"{MODELS_DIRECTORY}/{args.algo}/config.json"
@@ -77,122 +76,126 @@ if __name__ == "__main__":
     checkpoint = torch.load(checkpoint_path, map_location=TORCH_DEVICE)
 
     # define tasks
-    num_coordinates = int(np.sqrt(NUM_META_EPISODES_PER_SEED))
-    target_velocities = np.linspace(MIN_VELOCITY, args.max_velocity, num = num_coordinates)
+    num_velocities = int(np.sqrt(NUM_META_EPISODES))
+    target_velocities = np.linspace(-args.grid_size, args.grid_size, num = num_velocities)
 
     tasks = list()
     results = dict()
 
-    for i in range(len(target_velocities)):
+    for i in range(len(num_velocities)):
         tasks.append({
             "target_velocity": target_velocities[i]
         })
         continue
 
     meta_episode_results = list()
-    for random_seed in RANDOM_SEEDS:
-        rl_squared_envs = make_vec_envs(
-            env_name=configs.env_id,
-            meta_episode_length = configs.meta_episode_length,
-            env_kwargs=configs.env_configs,
-            seed = random_seed,
-            num_processes = NUM_PROCESSES,
-            device = TORCH_DEVICE,
-            gamma = configs.discount_gamma,
-            norm_observations = configs.norm_observations,
-            norm_rewards = configs.norm_rewards,
-        )
 
-        vec_norm = get_vec_normalize(rl_squared_envs)
-        if vec_norm is not None:
-            vec_norm.obs_rms = checkpoint["observations_rms"]
-            vec_norm.ret_rms = checkpoint["rewards_rms"]
-            pass
+    rl_squared_envs = make_vec_envs(
+        env_name=configs.env_id,
+        meta_episode_length = configs.meta_episode_length,
+        env_kwargs=configs.env_configs,
+        seed = args.random_seed,
+        num_processes = NUM_PROCESSES,
+        device = TORCH_DEVICE,
+        gamma = configs.discount_gamma,
+        norm_observations = configs.norm_observations,
+        norm_rewards = configs.norm_rewards,
+    )
 
-        # policy
-        actor_critic = StatefulActorCritic(
-            rl_squared_envs.observation_space,
-            rl_squared_envs.action_space,
-            recurrent_state_size=RECURRENT_STATE_SIZE,
-        ).to_device(TORCH_DEVICE)
+    vec_norm = get_vec_normalize(rl_squared_envs)
+    if vec_norm is not None:
+        vec_norm.obs_rms = checkpoint["observations_rms"]
+        vec_norm.ret_rms = checkpoint["rewards_rms"]
+        pass
 
-        actor_critic.actor.load_state_dict(checkpoint["actor_state_dict"])
-        actor_critic.critic.load_state_dict(checkpoint["critic_state_dict"])
+    # policy
+    actor_critic = StatefulActorCritic(
+        rl_squared_envs.observation_space,
+        rl_squared_envs.action_space,
+        recurrent_state_size=RECURRENT_STATE_SIZE,
+    ).to_device(TORCH_DEVICE)
 
-        # render
-        recurrent_states_actor = torch.zeros(1, actor_critic.recurrent_state_size)
-        recurrent_states_critic = torch.zeros(1, actor_critic.recurrent_state_size)
-        recurrent_masks = torch.zeros(1, 1)
+    actor_critic.actor.load_state_dict(checkpoint["actor_state_dict"])
+    actor_critic.critic.load_state_dict(checkpoint["critic_state_dict"])
 
-        obs = rl_squared_envs.reset(random_seed)
+    # render
+    recurrent_states_actor = torch.zeros(1, actor_critic.recurrent_state_size)
+    recurrent_states_critic = torch.zeros(1, actor_critic.recurrent_state_size)
+    recurrent_masks = torch.zeros(1, 1)
 
-        with torch.no_grad():
-            for iters in range(NUM_META_EPISODES_PER_SEED // NUM_PROCESSES):
-                meta_episodes = MetaEpisodeBatch(
-                    configs.meta_episode_length,
-                    NUM_PROCESSES,
-                    rl_squared_envs.observation_space,
-                    rl_squared_envs.action_space,
-                    RECURRENT_STATE_SIZE,
+    obs = rl_squared_envs.reset()
+
+    with torch.no_grad():
+        for iters in range(NUM_META_EPISODES // NUM_PROCESSES):
+            print("Current seed:", args.random_seed, ", number of meta episodes:", iters * NUM_PROCESSES, " of ",
+                  NUM_META_EPISODES)
+            meta_episodes = MetaEpisodeBatch(
+                configs.meta_episode_length,
+                NUM_PROCESSES,
+                rl_squared_envs.observation_space,
+                rl_squared_envs.action_space,
+                RECURRENT_STATE_SIZE,
+            )
+
+            sampled_tasks = tasks[iters * NUM_PROCESSES: iters * NUM_PROCESSES + NUM_PROCESSES]
+            rl_squared_envs.sample_tasks_async(sampled_tasks)
+            initial_observations = rl_squared_envs.reset()
+            meta_episodes.obs[0].copy_(initial_observations)
+
+            for step in range(configs.meta_episode_length):
+                (
+                    value_preds,
+                    actions,
+                    action_log_probs,
+                    recurrent_states_actor,
+                    recurrent_states_critic,
+                ) = actor_critic.act(
+                    meta_episodes.obs[step].to(TORCH_DEVICE),
+                    meta_episodes.recurrent_states_actor[step].to(TORCH_DEVICE),
+                    meta_episodes.recurrent_states_critic[step].to(TORCH_DEVICE),
+                    recurrent_state_masks = None,
+                    deterministic = True
                 )
 
-                sampled_tasks = tasks[iters * NUM_PROCESSES: iters * NUM_PROCESSES + NUM_PROCESSES]
-                rl_squared_envs.sample_tasks_async(sampled_tasks)
-                initial_observations = rl_squared_envs.reset()
-                meta_episodes.obs[0].copy_(initial_observations)
+                obs, rewards, dones, infos = rl_squared_envs.step(actions)
 
-                for step in range(configs.meta_episode_length):
-                    (
-                        value_preds,
-                        actions,
-                        action_log_probs,
-                        recurrent_states_actor,
-                        recurrent_states_critic,
-                    ) = actor_critic.act(
-                        meta_episodes.obs[step].to(TORCH_DEVICE),
-                        meta_episodes.recurrent_states_actor[step].to(TORCH_DEVICE),
-                        meta_episodes.recurrent_states_critic[step].to(TORCH_DEVICE),
-                        recurrent_state_masks = None,
-                        deterministic = True
-                    )
+                # rewards
+                for info in infos:
+                    if "meta_episode" in info.keys():
+                        meta_episode_results.append({
+                            "target_velocity": info["meta_episode"]["sampled_task"],
+                            "r": info["meta_episode"]["r"],
+                            "random_seed": args.random_seed
+                        })
+                        pass
 
-                    obs, rewards, dones, infos = rl_squared_envs.step(actions)
+                # dones
+                done_masks = torch.FloatTensor(
+                    [[0.0] if _done else [1.0] for _done in dones]
+                )
 
-                    # rewards
-                    for info in infos:
-                        if "meta_episode" in info.keys():
-                            meta_episode_results.append({
-                                "target_velocity": info["meta_episode"]["sampled_task"],
-                                "r": info["meta_episode"]["r"],
-                                "random_seed": random_seed
-                            })
-                            pass
-
-                    # dones
-                    done_masks = torch.FloatTensor(
-                        [[0.0] if _done else [1.0] for _done in dones]
-                    )
-
-                    # insert
-                    meta_episodes.insert(
-                        obs,
-                        recurrent_states_actor,
-                        recurrent_states_critic,
-                        actions,
-                        action_log_probs,
-                        value_preds,
-                        rewards,
-                        done_masks,
-                    )
-                    continue
+                # insert
+                meta_episodes.insert(
+                    obs,
+                    recurrent_states_actor,
+                    recurrent_states_critic,
+                    actions,
+                    action_log_probs,
+                    value_preds,
+                    rewards,
+                    done_masks,
+                )
+                continue
 
     # save
     keys = meta_episode_results[0].keys()
 
-    if not os.path.exists(DATA_DIRECTORY):
-        os.makedirs(DATA_DIRECTORY)
+    # results
+    results_directory = f"{DATA_DIRECTORY}/{args.algo}/{int(args.grid_size)}x{int(args.grid_size)}/"
+    if not os.path.exists(results_directory):
+        os.makedirs(results_directory)
 
-    with open(f'{DATA_DIRECTORY}/{args.algo}-grid-size-{int(args.grid_size)}.csv', 'w', newline = '') as output_file:
+    with open(f"{results_directory}/seed-{args.random_seed}.csv", "w", newline = "") as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(meta_episode_results)

@@ -1,6 +1,6 @@
 {
   "algo": "rl_squared",
-  "env_id": "PointNavigation-v1",
+  "env_id": "CheetahVelocity-v1",
   "env_configs": {
     "episode_length": 200
   },
@@ -18,7 +18,7 @@
   "meta_episodes_per_epoch": 125,
   "meta_episode_length": 400,
   "num_processes": 25,
-  "discount_gamma": 0.99,
+  "discount_gamma": 0.97,
   "ppo_opt_epochs": 5,
   "ppo_clip_param": 0.1,
   "ppo_entropy_coef": 0.01,

@@ -29,8 +29,8 @@ if __name__ == "__main__":
     DATA_DIRECTORY = f"{EVAL_DIRECTORY}/data/"
 
     SUPPORTED_ALGOS = [RL_SQUARED, AUTO_DR]
-    NUM_META_EPISODES = 10_000
-    NUM_PROCESSES = 25
+    NUM_META_EPISODES = 100
+    NUM_PROCESSES = 5
     RECURRENT_STATE_SIZE = 256
     TORCH_DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -63,6 +63,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    # torch seed
+    torch.manual_seed(args.random_seed)
 
     # config
     config_path = f"{MODELS_DIRECTORY}/{args.algo}/config.json"
