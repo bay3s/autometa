@@ -31,7 +31,7 @@
   "adr_performance_threshold_lower": -300,
   "adr_performance_threshold_upper": -150,
   "adr_deltas": {
-    "x_position": 0.01,
-    "y_position": 0.01
+    "x_position": 0.03,
+    "y_position": 0.03
   }
 }
