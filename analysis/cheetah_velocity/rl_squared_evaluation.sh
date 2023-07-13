@@ -12,5 +12,5 @@
 
 for seed in 2878 5069 5073 5250 4420
   do
-    python3 $HOME/Desktop/code/autometa/analysis/cheetah_velocity/run_evaluation.py --algo=rl_squared --max-velocity=3.0 --random-seed=$seed
+    python3 $HOME/autometa/analysis/cheetah_velocity/run_evaluation.py --algo=rl_squared --max-velocity=3.0 --random-seed=$seed
   done
