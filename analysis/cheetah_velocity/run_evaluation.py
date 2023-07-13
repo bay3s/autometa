@@ -29,8 +29,8 @@ if __name__ == "__main__":
     DATA_DIRECTORY = f"{EVAL_DIRECTORY}/data/"
 
     SUPPORTED_ALGOS = [RL_SQUARED, AUTO_DR]
-    NUM_META_EPISODES = 100
-    NUM_PROCESSES = 5
+    NUM_META_EPISODES = 1_00_00
+    NUM_PROCESSES = 25
     RECURRENT_STATE_SIZE = 256
     TORCH_DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -77,12 +77,12 @@ if __name__ == "__main__":
 
     # define tasks
     num_velocities = int(np.sqrt(NUM_META_EPISODES))
-    target_velocities = np.linspace(-args.grid_size, args.grid_size, num = num_velocities)
+    target_velocities = np.linspace(0.05, args.max_velocity, num = num_velocities)
 
     tasks = list()
     results = dict()
 
-    for i in range(len(num_velocities)):
+    for i in range(len(target_velocities)):
         tasks.append({
             "target_velocity": target_velocities[i]
         })
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     keys = meta_episode_results[0].keys()
 
     # results
-    results_directory = f"{DATA_DIRECTORY}/{args.algo}/{int(args.grid_size)}x{int(args.grid_size)}/"
+    results_directory = f"{DATA_DIRECTORY}/{args.algo}/max-{int(args.max_velocity)}/"
     if not os.path.exists(results_directory):
         os.makedirs(results_directory)
 
