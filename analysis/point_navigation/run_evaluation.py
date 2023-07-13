@@ -29,8 +29,8 @@ if __name__ == "__main__":
     DATA_DIRECTORY = f"{EVAL_DIRECTORY}/data/"
 
     SUPPORTED_ALGOS = [RL_SQUARED, AUTO_DR]
-    NUM_META_EPISODES = 100
-    NUM_PROCESSES = 5
+    NUM_META_EPISODES = 1_00_00
+    NUM_PROCESSES = 25
     RECURRENT_STATE_SIZE = 256
     TORCH_DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
