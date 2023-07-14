@@ -29,7 +29,7 @@
   "adr_evaluation_probability": 0.5,
   "adr_performance_buffer_size": 20,
   "adr_performance_threshold_lower": -750,
-  "adr_performance_threshold_upper": -175,
+  "adr_performance_threshold_upper": -200,
   "adr_deltas": {
     "target_velocity": 0.03
   }

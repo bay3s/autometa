@@ -144,7 +144,7 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
         done = truncated or terminated
 
         info = dict()
-        info["sampled_task"] = self._target_velocity
+        info["sampled_task"] = self._target_velocity.item()
 
         if done:
             info["episode"] = {}
