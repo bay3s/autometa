@@ -18,7 +18,7 @@ class CheetahVelocityEnv(BaseCheetahEnv, EzPickle):
                 type=RandomizationBoundType.LOWER_BOUND,
                 value=0.05,
                 min_value=0.05,
-                max_value=0.0,
+                max_value=0.05,
                 frozen=True,
             ),
             upper_bound=RandomizationBound(
