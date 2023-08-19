@@ -16,18 +16,18 @@ class AntVelocityEnv(BaseAntEnv, EzPickle):
             name="target_velocity",
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
-                value=0.0,
-                min_value=0.0,
-                max_value=0.0,
+                value=0.05,
+                min_value=0.05,
+                max_value=0.05,
                 frozen=True,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
-                value=0.0,
-                min_value=0.0,
+                value=0.05,
+                min_value=0.05,
                 max_value=3.0,
             ),
-            delta=0.05,
+            delta=0.03,
         ),
     ]
 
@@ -189,7 +189,9 @@ class AntVelocityEnv(BaseAntEnv, EzPickle):
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 
-        info = {}
+        info = dict()
+        info["sampled_task"] = self._target_velocity
+
         if done:
             info["episode"] = {}
             info["episode"]["r"] = self._episode_reward

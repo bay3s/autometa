@@ -7,6 +7,10 @@ gym[box2d] == 0.26.2
 stable-baselines3 == 1.2.0
 mujoco_py == 2.1.2.14
 pyglet==1.5.27
-wandb
+wandb~=0.15.3
 six~=1.16.0
 gitpython
+argparse~=1.4.0
+setuptools~=66.0.0
+pandas~=2.0.1
+seaborn~=0.12.2

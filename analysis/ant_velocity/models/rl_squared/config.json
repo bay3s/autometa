@@ -1,0 +1,29 @@
+{
+  "algo": "rl_squared",
+  "env_id": "AntVelocity-v1",
+  "env_configs": {
+    "episode_length": 200
+  },
+  "norm_observations": true,
+  "norm_rewards": true,
+  "use_linear_lr_decay": true,
+  "actor_lr": 0.0003,
+  "critic_lr": 0.0001,
+  "optimizer_eps": 1e-08,
+  "max_grad_norm": 0.5,
+  "random_seed": 6785,
+  "cuda_deterministic": false,
+  "use_cuda": true,
+  "policy_iterations": 500,
+  "meta_episodes_per_epoch": 125,
+  "meta_episode_length": 400,
+  "num_processes": 25,
+  "discount_gamma": 0.99,
+  "ppo_opt_epochs": 5,
+  "ppo_clip_param": 0.1,
+  "ppo_entropy_coef": 0.01,
+  "ppo_value_loss_coef": 0.5,
+  "ppo_num_minibatches": 25,
+  "use_gae": true,
+  "gae_lambda": 0.9
+}

@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -15,6 +16,9 @@ from autometa.networks.stateful.stateful_actor_critic import StatefulActorCritic
 
 
 class BaseTrainer(ABC):
+
+    EVALUATION_RANDOM_SEED = 1234
+
     def __init__(self, config: BaseTrainingConfig, checkpoint_path: str = None):
         """
         Initialize an instance of a trainer for PPO.
@@ -29,10 +33,11 @@ class BaseTrainer(ABC):
         self.wandb_initialized = False
         self.torch_device = None
         self.randomizer = None
+
         self.timestamp = self._timestamp()
         self._directory = None
 
-        self.vectorized_envs = make_vec_envs(
+        self.meta_train_envs = make_vec_envs(
             self.config.env_id,
             self.config.meta_episode_length,
             self.config.env_configs,
@@ -44,9 +49,21 @@ class BaseTrainer(ABC):
             norm_observations=self.config.norm_observations,
         )
 
+        self.meta_evaluation_envs = make_vec_envs(
+            self.config.env_id,
+            self.config.meta_episode_length,
+            self.config.env_configs,
+            self.EVALUATION_RANDOM_SEED,
+            self.config.num_processes,
+            self.device,
+            self.config.discount_gamma,
+            norm_rewards=self.config.norm_rewards,
+            norm_observations=self.config.norm_observations,
+        )
+
         self.actor_critic = StatefulActorCritic(
-            self.vectorized_envs.observation_space,
-            self.vectorized_envs.action_space,
+            self.meta_train_envs.observation_space,
+            self.meta_train_envs.action_space,
             recurrent_state_size=256,
         ).to_device(self.device)
 
@@ -62,6 +79,7 @@ class BaseTrainer(ABC):
             eps=self.config.optimizer_eps,
             max_grad_norm=self.config.max_grad_norm,
         )
+
         if checkpoint_path is not None:
             self.load_checkpoint(checkpoint_path)
 
@@ -191,6 +209,8 @@ class BaseTrainer(ABC):
         self,
         checkpoint_interval: int,
         checkpoint_all: bool,
+        evaluation_interval: int,
+        evaluation_meta_episodes: int,
         enable_wandb: bool,
         is_dev: bool = True,
     ) -> None:
@@ -200,8 +220,10 @@ class BaseTrainer(ABC):
         Args:
             checkpoint_interval (int): Number of iterations after which to checkpoint.
             checkpoint_all (bool): Whether to archive all checkpoints.
+            evaluation_interval (int): Number of iterations between each evaluation.
+            evaluation_meta_episodes (int): Number of episodes per meta-evaluation.
             enable_wandb (bool): Whether to log to Wandb, `True` by default.
-            is_dev (bool): Whether this is a dev run of th experiment.
+            is_dev (bool): Whether this is a dev run of the experiment.
 
         Returns:
             None
