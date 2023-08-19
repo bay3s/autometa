@@ -10,6 +10,7 @@ from autometa.training.rl_squared.rl_squared_checkpoint import RLSquaredCheckpoi
 from autometa.utils.training_utils import (
     sample_rl_squared,
     timestamp,
+    evaluate,
 )
 
 from autometa.sampling.meta_batch_sampler import MetaBatchSampler
@@ -46,7 +47,7 @@ class RLSquaredTrainer(BaseTrainer):
         self.ppo.optimizer.load_state_dict(self.checkpoint.optimizer_state_dict)
 
         # rms
-        vec_normalized = get_vec_normalize(self.vectorized_envs)
+        vec_normalized = get_vec_normalize(self.meta_train_envs)
         vec_normalized.obs_rms = self.checkpoint.observations_rms
         vec_normalized.ret_rms = self.checkpoint.rewards_rms
         pass
@@ -55,6 +56,8 @@ class RLSquaredTrainer(BaseTrainer):
         self,
         checkpoint_interval: int,
         checkpoint_all: bool,
+        evaluation_interval: int,
+        evaluation_meta_episodes: int,
         enable_wandb: bool,
         is_dev: bool = True,
     ) -> None:
@@ -64,6 +67,8 @@ class RLSquaredTrainer(BaseTrainer):
         Args:
             checkpoint_interval (int): Number of iterations after which to checkpoint.
             checkpoint_all (bool): Whether to archive all checkpoints.
+            evaluation_interval (int): Number of iterations between evaluations.
+            evaluation_meta_episodes (int): Number of episodes per meta-evaluation.
             enable_wandb (bool): Whether to log to Wandb, `True` by default.
             is_dev (bool): Whether this is a dev run of th experiment.
 
@@ -91,7 +96,7 @@ class RLSquaredTrainer(BaseTrainer):
             # sample
             meta_episode_batches, meta_episode_rewards = sample_rl_squared(
                 self.actor_critic,
-                self.vectorized_envs,
+                self.meta_train_envs,
                 self.config.meta_episode_length,
                 self.config.meta_episodes_per_epoch,
                 self.config.use_gae,
@@ -122,6 +127,26 @@ class RLSquaredTrainer(BaseTrainer):
                 self.save_checkpoint(checkpoint_name)
                 pass
 
+            if j % evaluation_interval == 0 or is_last_iteration:
+                meta_eval_normalized_envs = get_vec_normalize(self.meta_evaluation_envs)
+                meta_train_normalized_envs = get_vec_normalize(self.meta_train_envs)
+
+                meta_eval_normalized_envs.obs_rms = meta_train_normalized_envs.obs_rms
+                meta_eval_normalized_envs.ret_rms = meta_train_normalized_envs.ret_rms
+
+                _, meta_eval_episode_rewards = evaluate(
+                    self.ppo.actor_critic,
+                    self.meta_evaluation_envs,
+                    self.config.meta_episode_length,
+                    evaluation_meta_episodes,
+                    self.device,
+                )
+
+                wandb_logs.update({
+                    "meta_eval/mean_meta_episode_reward": np.mean(meta_eval_episode_rewards),
+                })
+                pass
+
             if enable_wandb:
                 wandb.log(wandb_logs)
 
@@ -143,7 +168,7 @@ class RLSquaredTrainer(BaseTrainer):
         Returns:
             None
         """
-        vec_normalized = get_vec_normalize(self.vectorized_envs)
+        vec_normalized = get_vec_normalize(self.meta_train_envs)
 
         checkpoint = RLSquaredCheckpoint(
             wandb_run_id=(

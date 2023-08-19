@@ -38,6 +38,7 @@ class RLSquaredEnv:
         self._prev_action = None
         self._prev_reward = None
         self._prev_done = None
+        self._sampled_task = None
 
         assert isinstance(
             self._observation_space, type(self._wrapped_env.observation_space)
@@ -121,6 +122,8 @@ class RLSquaredEnv:
         if self._meta_episode_steps >= self._meta_episode_length:
             info["meta_episode"] = dict()
             info["meta_episode"]["r"] = self._meta_episode_rewards
+            info["meta_episode"]["sampled_task"] = info["sampled_task"]
+            pass
 
         return next_obs, reward, done, info
 
@@ -222,7 +225,7 @@ class RLSquaredEnv:
         self._prev_done = None
 
         # sample
-        self._wrapped_env.sample_task(task)
+        self._sampled_task = self._wrapped_env.sample_task(task)
         pass
 
     def randomizable_parameters(self) -> List[RandomizationParameter]:

@@ -17,14 +17,14 @@ class PointNavigationEnv(EzPickle, BaseRandomizedEnv):
             name="x_position",
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
-                value=0.0,
+                value=-0.05,
                 min_value=-3.0,
-                max_value=0.0,
+                max_value=-0.05,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
-                value=0.0,
-                min_value=0.0,
+                value=0.05,
+                min_value=0.05,
                 max_value=3.0,
             ),
             delta=0.05,
@@ -33,14 +33,14 @@ class PointNavigationEnv(EzPickle, BaseRandomizedEnv):
             name="y_position",
             lower_bound=RandomizationBound(
                 type=RandomizationBoundType.LOWER_BOUND,
-                value=0.0,
+                value=-0.05,
                 min_value=-3.0,
-                max_value=0.0,
+                max_value=-0.05,
             ),
             upper_bound=RandomizationBound(
                 type=RandomizationBoundType.UPPER_BOUND,
-                value=0.0,
-                min_value=0.0,
+                value=0.05,
+                min_value=0.05,
                 max_value=3.0,
             ),
             delta=0.05,
@@ -152,16 +152,13 @@ class PointNavigationEnv(EzPickle, BaseRandomizedEnv):
             task["y_position"] = self.np_random.uniform(
                 y_param.lower_bound.min_value, y_param.upper_bound.max_value
             )
-            pass
 
         self._target_state = np.concatenate(
             [
                 [task["x_position"]],
                 [task["y_position"]],
-            ],
-            dtype=np.float32,
+            ]
         )
-        pass
 
     def reset(
         self, *, seed: Optional[int] = None, options: Optional[dict] = None
@@ -215,7 +212,9 @@ class PointNavigationEnv(EzPickle, BaseRandomizedEnv):
         truncated = self.elapsed_steps == self.max_episode_steps
         done = truncated or terminated
 
-        info = {}
+        info = dict()
+        info["sampled_task"] = self._target_state
+
         if done:
             info["episode"] = {}
             info["episode"]["r"] = self._episode_reward

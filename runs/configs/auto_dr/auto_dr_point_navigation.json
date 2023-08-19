@@ -3,17 +3,17 @@
   "env_id": "PointNavigation-v1",
   "random_seed": 6785,
   "env_configs": {
-    "episode_length": 100
+    "episode_length": 200
   },
   "actor_lr": 0.0003,
   "critic_lr": 0.0001,
-  "use_linear_lr_decay": false,
+  "use_linear_lr_decay": true,
   "optimizer_eps": 0.00000001,
   "max_grad_norm": 0.5,
   "cuda_deterministic": false,
   "use_cuda": true,
   "policy_iterations": 500,
-  "meta_episode_length": 200,
+  "meta_episode_length": 400,
   "meta_episodes_per_epoch": 125,
   "num_processes": 25,
   "discount_gamma": 0.99,
@@ -27,9 +27,9 @@
   "norm_observations": true,
   "norm_rewards": true,
   "adr_evaluation_probability": 0.5,
-  "adr_performance_buffer_size": 40,
-  "adr_performance_threshold_lower": -250,
-  "adr_performance_threshold_upper": -80,
+  "adr_performance_buffer_size": 10,
+  "adr_performance_threshold_lower": -500,
+  "adr_performance_threshold_upper": -175,
   "adr_deltas": {
     "x_position": 0.03,
     "y_position": 0.03

@@ -102,8 +102,21 @@ if __name__ == "__main__":
         "--checkpoint-interval",
         type=int,
         default=1,
-        action=argparse.BooleanOptionalAction,
-        help=f"Iteration interval between two consecutive checkpoints.",
+        help=f"Number of iterations between successive checkpoints.",
+    )
+
+    parser.add_argument(
+        "--evaluation-interval",
+        type = int,
+        default = 1,
+        help = f"Number of iterations between successive evaluations.",
+    )
+
+    parser.add_argument(
+        "--evaluation-episodes",
+        type = int,
+        default = 250,
+        help = f"Number of iterations between successive evaluations.",
     )
 
     # args
@@ -140,5 +153,7 @@ if __name__ == "__main__":
         is_dev=not args.prod,
         checkpoint_interval=args.checkpoint_interval,
         checkpoint_all=args.checkpoint_all,
+        evaluation_interval = args.evaluation_interval,
+        evaluation_meta_episodes = args.evaluation_episodes,
     )
     pass
